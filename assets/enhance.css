@@ -1,0 +1,149 @@
+/* ============================================================
+   H-TALKS — enhancements (shared) — 2026
+   Acessibilidade, motion-safety, scroll-reveal, nav mobile,
+   estados de foco e polimento de formul치rios.
+   Carregado em ambas as p치ginas após o <style> inline,
+   então só adiciona — não conflita com o design existente.
+   ============================================================ */
+
+/* ---------- anchors não ficam atrás do nav sticky ---------- */
+:where(section[id], [id].section, #diagnostico, #segmentos, #recursos,
+        #planos, #contato, #solucao, #servicos, #processo, #casos, #stack){
+  scroll-margin-top: 92px;
+}
+html{ scroll-behavior: smooth; }
+
+/* ---------- foco visível (teclado) consistente ---------- */
+a:focus-visible, button:focus-visible,
+input:focus-visible, select:focus-visible, textarea:focus-visible,
+.btn:focus-visible, .seg-tab:focus-visible{
+  outline: 2px solid var(--cyan-2, #22d3ee);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+.btn:focus:not(:focus-visible){ outline: none; }
+
+/* ---------- nav: estado ao rolar ---------- */
+.nav{ transition: box-shadow .25s ease, background .25s ease, border-color .25s ease; }
+.nav.is-scrolled{
+  background: rgba(8,12,24,.92);
+  box-shadow: 0 8px 30px -12px rgba(0,0,0,.6);
+  border-bottom-color: var(--border, #1e293b);
+}
+
+/* ---------- botão hamburger (mobile) ---------- */
+.nav-burger{
+  display: none;
+  margin-left: auto;
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  border: 1px solid var(--border, #1e293b);
+  background: rgba(255,255,255,.03);
+  align-items: center; justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.nav-burger span{
+  position: relative;
+  width: 18px; height: 2px; border-radius: 2px;
+  background: #fff;
+  transition: transform .25s ease, opacity .2s ease;
+}
+.nav-burger span::before,
+.nav-burger span::after{
+  content: ""; position: absolute; left: 0;
+  width: 18px; height: 2px; border-radius: 2px; background: #fff;
+  transition: transform .25s ease, top .25s ease;
+}
+.nav-burger span::before{ top: -6px; }
+.nav-burger span::after{ top: 6px; }
+.nav-burger[aria-expanded="true"] span{ background: transparent; }
+.nav-burger[aria-expanded="true"] span::before{ top: 0; transform: rotate(45deg); }
+.nav-burger[aria-expanded="true"] span::after{ top: 0; transform: rotate(-45deg); }
+
+/* ---------- painel mobile ---------- */
+.mobile-menu{
+  position: fixed; inset: 0 0 auto 0; top: 0;
+  z-index: 60;
+  padding: 88px 22px 28px;
+  background: rgba(8,12,24,.98);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border, #1e293b);
+  transform: translateY(-100%);
+  opacity: 0; visibility: hidden;
+  transition: transform .32s cubic-bezier(.22,1,.36,1), opacity .25s ease, visibility .32s;
+}
+.mobile-menu.is-open{ transform: translateY(0); opacity: 1; visibility: visible; }
+.mobile-menu a.m-link{
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 16px 6px;
+  font-size: 19px; font-weight: 600; color: #fff;
+  border-bottom: 1px solid var(--border-soft, #172033);
+}
+.mobile-menu a.m-link.active{ color: var(--cyan-2, #22d3ee); }
+.mobile-menu a.m-link svg{ width: 16px; height: 16px; opacity: .4; }
+.mobile-menu .m-cta{ margin-top: 22px; display: flex; flex-direction: column; gap: 10px; }
+.mobile-menu .m-cta .btn{ width: 100%; padding: 15px; font-size: 15.5px; }
+body.menu-open{ overflow: hidden; }
+
+/* ---------- scroll reveal (só quando JS ativo + motion ok) ---------- */
+.js-ready .reveal{
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .6s cubic-bezier(.22,1,.36,1), transform .6s cubic-bezier(.22,1,.36,1);
+  will-change: opacity, transform;
+}
+.js-ready .reveal.is-visible{ opacity: 1; transform: none; }
+
+/* ---------- selects estilizados (form de diagnóstico) ---------- */
+.field select{
+  appearance: none; -webkit-appearance: none; -moz-appearance: none;
+  background-image:
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  padding-right: 40px !important;
+  cursor: pointer;
+}
+.field select option{ background: #0f172a; color: #fff; }
+.field input::placeholder, .field textarea::placeholder{ color: #64748b; }
+
+/* ---------- reduced motion: desliga tudo que se mexe ---------- */
+@media (prefers-reduced-motion: reduce){
+  *, *::before, *::after{
+    animation-duration: .001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .001ms !important;
+    scroll-behavior: auto !important;
+  }
+  .js-ready .reveal{ opacity: 1; transform: none; }
+}
+
+/* ---------- botão flutuante de WhatsApp ---------- */
+.wa-float{
+  position: fixed; right: 20px; bottom: 20px; z-index: 55;
+  width: 56px; height: 56px; border-radius: 50%;
+  background: #25d366; color: #fff;
+  display: grid; place-items: center;
+  box-shadow: 0 12px 32px -8px rgba(37,211,102,.5), 0 4px 12px rgba(0,0,0,.35);
+  transition: transform .2s ease, box-shadow .2s ease, opacity .25s ease;
+}
+.wa-float:hover{ transform: translateY(-2px) scale(1.05); box-shadow: 0 16px 40px -8px rgba(37,211,102,.55), 0 6px 16px rgba(0,0,0,.4); }
+.wa-float svg{ width: 30px; height: 30px; }
+body.menu-open .wa-float{ opacity: 0; pointer-events: none; }
+@media print{ .wa-float{ display: none; } }
+
+/* ---------- mostra burger / mantém CTA principal no mobile ---------- */
+@media (max-width: 980px){
+  .nav-burger{ display: inline-flex; margin-left: 0; }
+  .nav-cta{ margin-left: auto; gap: 8px; }
+  .nav-cta .btn-link{ display: none; }
+  .nav-cta .btn-primary{ padding: 9px 14px; font-size: 13px; }
+}
+@media (max-width: 400px){
+  .nav-cta .btn-primary{ padding: 8px 11px; font-size: 12px; }
+}
+@media (min-width: 981px){
+  .mobile-menu{ display: none; }
+}
