@@ -389,26 +389,36 @@
     display:grid;grid-template-columns:1fr;gap:36px;
   }
   .seg-tabs{
-    display:flex;gap:8px;flex-wrap:wrap;
-    border-bottom:1px solid var(--border);
-    padding-bottom:0;margin-bottom:0;
+    display:inline-flex;gap:6px;flex-wrap:wrap;
+    padding:6px;border-radius:14px;
+    background:rgba(255,255,255,.03);
+    border:1px solid var(--border);
+    width:fit-content;
   }
   .seg-tab{
-    padding:14px 18px;border:0;background:none;
-    color:var(--text-3);font-size:15px;font-weight:600;
-    border-bottom:2px solid transparent;margin-bottom:-1px;
-    display:inline-flex;align-items:center;gap:8px;
-    transition:.15s;
+    padding:11px 18px;border:1px solid transparent;background:none;
+    color:var(--text-3);font-size:14.5px;font-weight:600;
+    border-radius:10px;cursor:pointer;
+    display:inline-flex;align-items:center;gap:9px;
+    transition:color .15s,background .2s,border-color .2s,box-shadow .2s;
   }
-  .seg-tab svg{width:16px;height:16px}
-  .seg-tab:hover{color:var(--text)}
-  .seg-tab.active{color:var(--text);border-bottom-color:var(--cyan-2)}
+  .seg-tab svg{width:16px;height:16px;opacity:.75;transition:opacity .15s}
+  .seg-tab:hover{color:var(--text);background:rgba(255,255,255,.04)}
+  .seg-tab.active{
+    color:#fff;
+    background:linear-gradient(135deg,rgba(37,99,235,.32),rgba(6,182,212,.20));
+    border-color:rgba(34,211,238,.35);
+    box-shadow:0 8px 24px -12px rgba(6,182,212,.55), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .seg-tab.active svg{opacity:1;color:var(--cyan-2)}
   .seg-panel{
     display:none;
-    grid-template-columns:1.1fr .9fr;gap:48px;align-items:start;
-    margin-top:48px;
+    grid-template-columns:1.05fr .95fr;gap:56px;align-items:center;
+    margin-top:44px;
   }
-  .seg-panel.active{display:grid}
+  .seg-panel.active{display:grid;animation:segIn .4s cubic-bezier(.2,.7,.3,1) both}
+  @keyframes segIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  @media (prefers-reduced-motion: reduce){.seg-panel.active{animation:none}}
   .seg-panel h3{
     font-size:28px;font-weight:700;letter-spacing:-.02em;
     margin:0 0 16px;text-wrap:balance;
@@ -426,12 +436,53 @@
   .chk svg{width:11px;height:11px;stroke-width:3}
 
   .seg-card{
-    background:linear-gradient(180deg,rgba(255,255,255,.025),rgba(255,255,255,.01));
-    border:1px solid var(--border);border-radius:16px;
-    padding:28px;
-    display:flex;flex-direction:column;gap:20px;
+    position:relative;overflow:hidden;
+    background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,.012));
+    border:1px solid var(--border);border-radius:20px;
+    padding:26px;
+    display:flex;flex-direction:column;gap:18px;
+    box-shadow:0 30px 60px -40px rgba(0,0,0,.8);
   }
+  .seg-card::before{
+    content:"";position:absolute;inset:0;pointer-events:none;
+    background:radial-gradient(420px 260px at 85% -10%,rgba(6,182,212,.14),transparent 65%),
+               radial-gradient(360px 240px at -10% 110%,rgba(37,99,235,.12),transparent 65%);
+  }
+  .seg-card > *{position:relative}
   .seg-card-h{display:flex;align-items:center;gap:14px}
+  .seg-live{
+    margin-left:auto;display:inline-flex;align-items:center;gap:7px;
+    font-size:11.5px;font-weight:600;color:var(--cyan-2);
+    padding:6px 11px;border-radius:99px;
+    background:rgba(6,182,212,.10);border:1px solid rgba(6,182,212,.25);
+    white-space:nowrap;
+  }
+  /* mini chat */
+  .seg-chat{display:flex;flex-direction:column;gap:10px;padding:4px 0 2px}
+  .scm{
+    max-width:82%;padding:11px 15px;border-radius:14px;
+    font-size:13.5px;line-height:1.45;color:var(--text-2);
+  }
+  .scm.in{
+    align-self:flex-start;background:rgba(255,255,255,.055);
+    border:1px solid var(--border);border-top-left-radius:4px;
+  }
+  .scm.out{
+    align-self:flex-end;color:#fff;
+    background:linear-gradient(135deg,var(--primary),var(--cyan));
+    border-top-right-radius:4px;
+    box-shadow:0 8px 20px -10px rgba(37,99,235,.6);
+  }
+  .scm.out .scm-who{color:rgba(255,255,255,.75)}
+  .scm-who{display:block;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-3);margin-bottom:4px}
+  .seg-chat .sc-tag{
+    align-self:center;margin-top:4px;
+    display:inline-flex;align-items:center;gap:7px;
+    font-size:12px;font-weight:600;color:var(--green);
+    padding:6px 12px;border-radius:99px;
+    background:rgba(16,185,129,.10);border:1px solid rgba(16,185,129,.25);
+  }
+  .seg-chat .sc-tag svg{width:12px;height:12px;stroke-width:3}
   .seg-card-ic{
     width:44px;height:44px;border-radius:11px;
     background:rgba(6,182,212,.12);color:var(--cyan-2);
@@ -441,17 +492,27 @@
   .seg-card-ic svg{width:20px;height:20px}
   .seg-card-h .ttl{font-size:13px;color:var(--text-3)}
   .seg-card-h .ttl b{display:block;color:var(--text);font-size:15px;font-weight:600;margin-top:2px}
-  .seg-metrics{display:flex;flex-direction:column;border-top:1px solid var(--border)}
+  .seg-metrics{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:0;
+    border-top:1px solid var(--border);padding-top:18px;
+  }
   .sm{
-    display:flex;align-items:baseline;justify-content:space-between;gap:18px;
-    padding:17px 0;border-bottom:1px solid var(--border);
+    display:flex;flex-direction:column;gap:5px;
+    padding:0 16px;border-left:1px solid var(--border);
   }
-  .sm:last-child{border-bottom:0;padding-bottom:0}
+  .sm:first-child{border-left:0;padding-left:0}
   .sm .n{
-    font-size:27px;font-weight:800;letter-spacing:-.02em;line-height:1;
-    color:var(--cyan-2);white-space:nowrap;flex-shrink:0;
+    font-size:24px;font-weight:800;letter-spacing:-.02em;line-height:1.1;
+    white-space:nowrap;
+    background:linear-gradient(135deg,#fff 20%,var(--cyan-2));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
   }
-  .sm .l{font-size:13.5px;color:var(--text-3);text-align:right;line-height:1.35;text-wrap:balance}
+  .sm .l{font-size:12px;color:var(--text-3);line-height:1.35;text-wrap:balance}
+  @media (max-width:640px){
+    .seg-metrics{grid-template-columns:1fr;gap:14px;padding-top:16px}
+    .sm{border-left:0;padding:0;flex-direction:row;align-items:baseline;justify-content:space-between;gap:14px}
+    .sm .l{text-align:right}
+  }
 
   /* ---------- RECURSOS ---------- */
   .features{
@@ -991,7 +1052,13 @@
         <div class="seg-card">
           <div class="seg-card-h">
             <div class="seg-card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg></div>
-            <div class="ttl">Resultado típico<b>Imobiliárias</b></div>
+            <div class="ttl">Na prática<b>Imobiliárias</b></div>
+            <span class="seg-live"><span class="live-dot"></span>IA respondendo</span>
+          </div>
+          <div class="seg-chat">
+            <div class="scm in"><span class="scm-who">Cliente · ZAP Imóveis</span>Vi o apartamento de 2 quartos no Jardins. Ainda está disponível?</div>
+            <div class="scm out"><span class="scm-who">IA · H-TALKS</span>Está disponível! Posso agendar uma visita — amanhã tenho 10h ou 15h. Qual prefere?</div>
+            <div class="sc-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>Visita agendada · lead enviado ao corretor</div>
           </div>
           <div class="seg-metrics">
             <div class="sm"><span class="n">3x</span><span class="l">Mais leads qualificados</span></div>
@@ -1015,7 +1082,13 @@
         <div class="seg-card">
           <div class="seg-card-h">
             <div class="seg-card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg></div>
-            <div class="ttl">Resultado típico<b>E-commerce</b></div>
+            <div class="ttl">Na prática<b>E-commerce</b></div>
+            <span class="seg-live"><span class="live-dot"></span>IA respondendo</span>
+          </div>
+          <div class="seg-chat">
+            <div class="scm in"><span class="scm-who">Cliente · WhatsApp</span>Deixei um tênis no carrinho ontem… ainda tem no 41?</div>
+            <div class="scm out"><span class="scm-who">IA · H-TALKS</span>Tem sim! Separei o seu no 41 e apliquei um cupom de 10%. Quer finalizar por aqui?</div>
+            <div class="sc-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>Carrinho recuperado · pedido fechado no chat</div>
           </div>
           <div class="seg-metrics">
             <div class="sm"><span class="n">↓ 3×</span><span class="l">Abandono de carrinho</span></div>
@@ -1039,7 +1112,13 @@
         <div class="seg-card">
           <div class="seg-card-h">
             <div class="seg-card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.29 1.49 4.04 3 5.5l7 7Z"/><path d="M3.22 12H9.5l.5-1 2 4.5 2-7 1.5 3.5h5.27"/></svg></div>
-            <div class="ttl">Resultado típico<b>Saúde</b></div>
+            <div class="ttl">Na prática<b>Saúde</b></div>
+            <span class="seg-live"><span class="live-dot"></span>IA respondendo</span>
+          </div>
+          <div class="seg-chat">
+            <div class="scm in"><span class="scm-who">Paciente · WhatsApp</span>Preciso remarcar minha consulta de quinta-feira.</div>
+            <div class="scm out"><span class="scm-who">IA · H-TALKS</span>Claro! A Dra. Ana tem horário sexta às 14h ou segunda às 9h30. Qual fica melhor?</div>
+            <div class="sc-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>Consulta remarcada · lembrete D-1 programado</div>
           </div>
           <div class="seg-metrics">
             <div class="sm"><span class="n">↓ Faltas</span><span class="l">com lembretes automáticos</span></div>
@@ -1063,7 +1142,13 @@
         <div class="seg-card">
           <div class="seg-card-h">
             <div class="seg-card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 16H9m10 0h3v-3.15a1 1 0 0 0-.84-.99L16 11l-2.7-3.6a1 1 0 0 0-.8-.4H5.24a2 2 0 0 0-1.8 1.1l-.8 1.63A6 6 0 0 0 2 12.42V16h3"/><circle cx="6.5" cy="16.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg></div>
-            <div class="ttl">Resultado típico<b>Concessionárias</b></div>
+            <div class="ttl">Na prática<b>Concessionárias</b></div>
+            <span class="seg-live"><span class="live-dot"></span>IA respondendo</span>
+          </div>
+          <div class="seg-chat">
+            <div class="scm in"><span class="scm-who">Cliente · WhatsApp</span>Qual o valor do SUV 2026 na promoção de julho?</div>
+            <div class="scm out"><span class="scm-who">IA · H-TALKS</span>A partir de R$ 189.900 com bônus de troca. Quer agendar um test-drive esta semana?</div>
+            <div class="sc-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>Test-drive agendado · lead quente no CRM</div>
           </div>
           <div class="seg-metrics">
             <div class="sm"><span class="n">3x</span><span class="l">Mais test-drives agendados</span></div>
@@ -1087,7 +1172,13 @@
         <div class="seg-card">
           <div class="seg-card-h">
             <div class="seg-card-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg></div>
-            <div class="ttl">Resultado típico<b>Advocacia</b></div>
+            <div class="ttl">Na prática<b>Advocacia</b></div>
+            <span class="seg-live"><span class="live-dot"></span>IA respondendo</span>
+          </div>
+          <div class="seg-chat">
+            <div class="scm in"><span class="scm-who">Cliente · WhatsApp</span>Recebi uma notificação trabalhista. O que devo fazer?</div>
+            <div class="scm out"><span class="scm-who">IA · H-TALKS</span>Posso ajudar. Envie o documento aqui mesmo que encaminho ao advogado da área trabalhista.</div>
+            <div class="sc-tag"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="20 6 9 17 4 12"/></svg>Triagem concluída · caso atribuído com sigilo</div>
           </div>
           <div class="seg-metrics">
             <div class="sm"><span class="n">2x</span><span class="l">Mais consultas agendadas</span></div>
