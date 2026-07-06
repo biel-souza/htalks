@@ -73,7 +73,8 @@
   }
   .nav-inner .brand-logo{height:48px}
   @media (max-width: 640px){
-    .nav-inner .brand-logo{height:32px}
+    .nav-inner .brand-logo{height:36px}
+    .nav-cta .btn-primary{display:none}
   }
   .footer-about .brand img{height:48px}
   .nav-links{display:flex;gap:32px;margin-left:12px}
@@ -665,7 +666,7 @@
   }
   .footer-bottom > div:last-child{display:flex;gap:24px}
   .footer-bottom a{color:var(--cyan-2);text-decoration:none;transition:color .2s}
-  .footer-bottom a:hover{color:var(--text-1)}
+  .footer-bottom a:hover{color:var(--text)}
 
   /* ---------- FAQ ---------- */
   .live-dot{
@@ -736,18 +737,40 @@
   @media (max-width: 600px){
     .container{padding:0 18px}
     .nav-inner{padding:14px 18px}
+    .nav-cta .btn-primary{display:none}
+    .nav-inner .brand-logo{height:36px}
+    .hero{padding-top:48px}
+    h1.headline{font-size:clamp(34px,10vw,46px);line-height:1.04}
+    .hero p.sub{font-size:16px;margin-bottom:30px}
+    .hero-ctas{flex-direction:column;align-items:stretch;max-width:340px;margin-left:auto;margin-right:auto}
+    .hero-ctas .btn{justify-content:center}
+    .metrics{flex-direction:column;gap:18px;padding:22px 0;margin-bottom:40px}
+    .metric{padding:0}
+    .metric + .metric::before{left:50%;top:-9px;bottom:auto;width:44px;height:1px;transform:translateX(-50%)}
+    .metric-n{font-size:26px}
+    .section{padding:64px 0}
+    .sec-head{margin-bottom:40px}
+    .sec-title{font-size:clamp(28px,8vw,34px)}
+    .sec-sub{font-size:16px}
     .consult-band{padding:30px 22px}
     .consult-band .cb-visual{height:130px}
     .features{grid-template-columns:1fr}
     .clients-grid{grid-template-columns:repeat(2,1fr)}
     .footer-grid{grid-template-columns:1fr}
     .footer-bottom{flex-direction:column;gap:16px;text-align:center}
-    .pf-body{grid-template-columns:48px 1fr;height:400px}
+    .pf-body{grid-template-columns:1fr;height:440px}
+    .pf-rail{display:none}
     .pf-list{display:none}
+    .pf-msgs{padding:16px;gap:12px}
+    .msg{max-width:86%;font-size:13px;padding:10px 13px}
     .final-cta{padding:64px 24px}
-    .product-shot{padding-bottom:80px}
+    .final-cta p{font-size:16px}
+    .final-cta .btns{flex-direction:column;align-items:stretch;max-width:340px;margin:0 auto}
+    .final-cta .btns .btn{justify-content:center}
+    .product-shot{padding-bottom:56px}
     .seg-tabs{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
     .seg-tabs::-webkit-scrollbar{display:none}
+    .status{display:none}
   }
 .client-logo-baked{object-fit:contain;width:100%;height:100%;border-radius:12px}
 </style>
@@ -1166,9 +1189,6 @@
         <p class="plan-desc">Ideal para pequenas equipes validando atendimento com IA.</p>
         <div class="plan-price"><span class="v">Sob consulta</span></div>
         <div class="plan-note">Conversa com nosso time para dimensionar.</div>
-        <a href="lgpd.html">LGPD</a>
-        <a href="politica-de-privacidade.html">Privacidade</a>
-        <a href="termos-de-uso.html">Termos de uso</a>
         <a href="https://wa.me/5547991053840?text=Ol%C3%A1!%20Quero%20falar%20com%20o%20time%20da%20H-TALKS." target="_blank" rel="noopener" class="btn btn-ghost plan-cta">Falar com vendas</a>
         <div class="plan-feat-h">Inclui</div>
         <ul class="plan-list">
@@ -1188,9 +1208,6 @@
         <p class="plan-desc">Para equipes médias e operações com volume crescente.</p>
         <div class="plan-price"><span class="v">Sob consulta</span></div>
         <div class="plan-note">Pricing flexível por uso de IA e canais ativos.</div>
-        <a href="lgpd.html">LGPD</a>
-        <a href="politica-de-privacidade.html">Privacidade</a>
-        <a href="termos-de-uso.html">Termos de uso</a>
         <a href="https://wa.me/5547991053840?text=Ol%C3%A1!%20Tenho%20interesse%20no%20plano%20Profissional%20da%20H-TALKS." target="_blank" rel="noopener" class="btn btn-primary plan-cta">Agendar demonstração</a>
         <div class="plan-feat-h">Tudo do Essencial, mais</div>
         <ul class="plan-list">
@@ -1209,9 +1226,6 @@
         <p class="plan-desc">Operações grandes com necessidades específicas de compliance e SLA.</p>
         <div class="plan-price"><span class="v">Custom</span></div>
         <div class="plan-note">Modelo dedicado por demanda e SLA.</div>
-        <a href="lgpd.html">LGPD</a>
-        <a href="politica-de-privacidade.html">Privacidade</a>
-        <a href="termos-de-uso.html">Termos de uso</a>
         <a href="https://wa.me/5547991053840?text=Ol%C3%A1!%20Quero%20falar%20sobre%20o%20plano%20Enterprise%20da%20H-TALKS." target="_blank" rel="noopener" class="btn btn-ghost plan-cta">Conversar com o time</a>
         <div class="plan-feat-h">Tudo do Profissional, mais</div>
         <ul class="plan-list">
@@ -1266,16 +1280,10 @@
       <h2>Transforme seu atendimento hoje.</h2>
       <p>Veja, em uma demonstração de 30 minutos, como sua operação pode atender 3x mais sem aumentar a equipe.</p>
       <div class="btns">
-        <a href="lgpd.html">LGPD</a>
-        <a href="politica-de-privacidade.html">Privacidade</a>
-        <a href="termos-de-uso.html">Termos de uso</a>
         <a href="https://wa.me/5547991053840?text=Ol%C3%A1!%20Gostaria%20de%20agendar%20uma%20demonstra%C3%A7%C3%A3o%20da%20H-TALKS." target="_blank" rel="noopener" class="btn btn-primary btn-lg">
           Agendar demonstração
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
         </a>
-        <a href="lgpd.html">LGPD</a>
-        <a href="politica-de-privacidade.html">Privacidade</a>
-        <a href="termos-de-uso.html">Termos de uso</a>
         <a href="https://wa.me/5547991053840?text=Ol%C3%A1!%20Quero%20falar%20com%20um%20especialista%20da%20H-TALKS." target="_blank" rel="noopener" class="btn btn-ghost btn-lg">Chamar no WhatsApp</a>
       </div>
     </div>
