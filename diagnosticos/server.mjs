@@ -251,5 +251,5 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
     console.error('ADMIN_PASSWORD é obrigatório.');
     process.exit(1);
   }
-  createApp().listen(port, host, () => console.log(`H-TALKS Diagnósticos em http://${host}:${port}`));
+  createApp({ databasePath: process.env.DATABASE_PATH }).listen(port, host, () => console.log(`H-TALKS Diagnósticos em http://${host}:${port}`));
 }
