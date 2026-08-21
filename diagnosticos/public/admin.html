@@ -10,7 +10,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/assets/styles.css?v=20260821-2">
+<link rel="stylesheet" href="/assets/styles.css?v=20260821-4">
 </head>
 <body>
 <nav class="nav">
@@ -23,6 +23,19 @@
 <div class="eyebrow">Painel interno</div>
 <h1>Fila de diagnósticos</h1>
 <p>A pontuação apoia a triagem; a decisão permanece humana.</p>
+<section class="queue-summary" aria-label="Resumo da fila">
+<div><strong data-metric="open">0</strong><span>Em aberto</span></div>
+<div><strong data-metric="new">0</strong><span>Novos</span></div>
+<div><strong data-metric="p1">0</strong><span>Prioridade P1</span></div>
+<div><strong data-metric="overdue">0</strong><span>Ações vencidas</span></div>
+</section>
+<section class="queue-filters" aria-label="Filtros da fila">
+<input type="search" data-filter="search" placeholder="Buscar empresa, lead, e-mail ou ID">
+<select data-filter="status"><option value="">Todos os status</option><option value="novo">Novo</option><option value="em_contato">Em contato</option><option value="qualificado">Qualificado</option><option value="reuniao">Reunião</option><option value="ganho">Ganho</option><option value="perdido">Perdido</option></select>
+<select data-filter="priority"><option value="">Todas as prioridades</option><option>P1</option><option>P2</option><option>P3</option></select>
+<select data-filter="offer"><option value="">Todas as ofertas</option><option value="atendimento">Atendimento</option><option value="consultoria">Consultoria de IA</option></select>
+<label><input type="checkbox" data-filter="overdue"> Somente vencidas</label>
+</section>
 <table>
 <thead>
 <tr>
@@ -42,7 +55,7 @@
 </tbody>
 </table>
 </main>
-<script src="/assets/admin.js" defer>
+<script src="/assets/admin.js?v=20260821-2" defer>
 </script>
 </body>
 </html>
