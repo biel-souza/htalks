@@ -163,7 +163,15 @@ function mime(path) {
 function staticFile(res, file) {
   try {
     const body = readFileSync(file);
-    res.writeHead(200, { 'content-type': mime(file), 'x-content-type-options': 'nosniff' });
+    const extension = extname(file);
+    const cacheControl = extension === '.html' || extension === '.css'
+      ? 'no-cache, must-revalidate'
+      : 'public, max-age=86400';
+    res.writeHead(200, {
+      'content-type': mime(file),
+      'cache-control': cacheControl,
+      'x-content-type-options': 'nosniff'
+    });
     res.end(body);
   } catch {
     res.writeHead(404).end('Não encontrado');
