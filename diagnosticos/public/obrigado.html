@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/styles.css?v=20260821-2">
+<script src="/assets/success.js?v=20260821-1" defer></script>
 </head>
 <body>
 <nav class="nav">
@@ -21,10 +22,26 @@
 </div>
 </nav>
 <main class="wrap success">
-<div class="eyebrow">Recebido</div>
-<h1>Sua solicitação entrou na revisão.</h1>
-<p>Uma pessoa da HEADS avaliará o contexto, a elegibilidade e o próximo passo. O envio não cria agendamento, proposta ou compromisso automático.</p>
-<a class="btn" href="/">Voltar ao início</a>
+<section class="success-card">
+<div class="success-mark" aria-hidden="true">✓</div>
+<div class="eyebrow">Solicitação recebida</div>
+<h1>Agora começa a revisão humana.</h1>
+<p>Recebemos seu diagnóstico. A equipe da HEADS avaliará o contexto, a elegibilidade e o melhor próximo passo.</p>
+<div class="protocol" data-protocol hidden>
+<span>Protocolo da solicitação</span>
+<strong data-protocol-value></strong>
+</div>
+<ol class="success-steps">
+<li><strong>Recebimento</strong><span>Os dados foram registrados com segurança.</span></li>
+<li><strong>Análise</strong><span>Uma pessoa revisará o cenário e a prioridade.</span></li>
+<li><strong>Retorno</strong><span>Se houver aderência ou dúvida, entraremos em contato pelo canal informado.</span></li>
+</ol>
+<p class="success-note">Este envio não cria agendamento, proposta ou compromisso automático.</p>
+<div class="success-actions">
+<a class="btn" data-whatsapp href="https://wa.me/5547991053840" target="_blank" rel="noopener">Falar no WhatsApp</a>
+<a class="btn btn-secondary" href="/">Voltar ao início</a>
+</div>
+</section>
 </main>
 </body>
 </html>

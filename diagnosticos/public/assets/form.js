@@ -26,6 +26,6 @@ form?.addEventListener('submit',async event=>{
     const response=await fetch('/api/leads',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payloadFromForm(form))});
     const result=await response.json();
     if(!response.ok) throw new Error(result.error||'Não foi possível enviar.');
-    location.href=`/obrigado?id=${encodeURIComponent(result.id)}`;
+    location.href=`/obrigado?id=${encodeURIComponent(result.id)}&oferta=${encodeURIComponent(form.dataset.offer)}`;
   }catch(error){statusEl.className='status error';statusEl.textContent=error.message;button.disabled=false;}
 });
