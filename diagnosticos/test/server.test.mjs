@@ -57,4 +57,23 @@ test('captura lead pela API e lista no painel autenticado', async t => {
   const queue = await listed.json();
   assert.equal(queue.leads.length, 1);
   assert.equal(queue.leads[0].priority, 'P1');
+
+  const updated = await fetch(`${base}/api/admin/leads/${result.id}`, {
+    method: 'PATCH',
+    headers: { authorization: `Basic ${Buffer.from('rafael:segredo').toString('base64')}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ status: 'qualificado', next_action: 'Agendar discovery', next_action_at: '2026-08-25T13:00:00.000Z', review_notes: 'Fit validado.' })
+  });
+  assert.equal(updated.status, 200);
+  const afterUpdate = await fetch(`${base}/api/admin/leads`, { headers: { authorization: `Basic ${Buffer.from('rafael:segredo').toString('base64')}` } });
+  const updatedQueue = await afterUpdate.json();
+  assert.equal(updatedQueue.leads[0].status, 'qualificado');
+  assert.equal(updatedQueue.leads[0].next_action, 'Agendar discovery');
+  assert.equal(updatedQueue.leads[0].review_notes, 'Fit validado.');
+
+  const invalidStatus = await fetch(`${base}/api/admin/leads/${result.id}`, {
+    method: 'PATCH',
+    headers: { authorization: `Basic ${Buffer.from('rafael:segredo').toString('base64')}`, 'content-type': 'application/json' },
+    body: JSON.stringify({ status: 'invalido' })
+  });
+  assert.equal(invalidStatus.status, 422);
 });

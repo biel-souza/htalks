@@ -133,6 +133,9 @@ export function createDatabase(path) {
     CREATE INDEX IF NOT EXISTS leads_created_idx ON leads(created_at DESC);
     CREATE INDEX IF NOT EXISTS leads_queue_idx ON leads(status, priority, created_at DESC);
   `);
+  const columns = new Set(db.prepare('PRAGMA table_info(leads)').all().map(column => column.name));
+  if (!columns.has('next_action')) db.exec("ALTER TABLE leads ADD COLUMN next_action TEXT NOT NULL DEFAULT ''");
+  if (!columns.has('next_action_at')) db.exec('ALTER TABLE leads ADD COLUMN next_action_at TEXT');
   return db;
 }
 
@@ -219,8 +222,32 @@ export function createApp(options = {}) {
     }
     if (req.method === 'GET' && url.pathname === '/api/admin/leads') {
       if (!authorized(req, adminUser, adminPassword)) return json(res, 401, { error: 'Não autorizado.' });
-      const rows = db.prepare('SELECT public_id, created_at, offer, name, company, email, phone, score, priority, status, source, campaign, payload_json FROM leads ORDER BY created_at DESC LIMIT 200').all();
+      const rows = db.prepare('SELECT public_id, created_at, offer, name, company, email, phone, score, priority, status, source, campaign, review_notes, reviewed_at, next_action, next_action_at, payload_json FROM leads ORDER BY created_at DESC LIMIT 200').all();
       return json(res, 200, { leads: rows.map(row => ({ ...row, payload: JSON.parse(row.payload_json), payload_json: undefined })) });
+    }
+    const adminLeadMatch = url.pathname.match(/^\/api\/admin\/leads\/(HT-[A-Z0-9-]+)$/);
+    if (req.method === 'PATCH' && adminLeadMatch) {
+      if (!authorized(req, adminUser, adminPassword)) return json(res, 401, { error: 'Não autorizado.' });
+      if (publicOrigin && req.headers.origin && req.headers.origin !== publicOrigin) return json(res, 403, { error: 'Origem inválida.' });
+      let raw = '';
+      for await (const chunk of req) {
+        raw += chunk;
+        if (raw.length > 16384) return json(res, 413, { error: 'Conteúdo excede o limite.' });
+      }
+      let input;
+      try { input = JSON.parse(raw); } catch { return json(res, 400, { error: 'JSON inválido.' }); }
+      const validStatuses = new Set(['novo', 'em_contato', 'qualificado', 'reuniao', 'ganho', 'perdido']);
+      const status = normalizeText(input.status, 30);
+      if (!validStatuses.has(status)) return json(res, 422, { error: 'Status inválido.' });
+      const reviewNotes = normalizeText(input.review_notes, 1000);
+      const nextAction = normalizeText(input.next_action, 300);
+      const nextActionAt = input.next_action_at ? new Date(input.next_action_at) : null;
+      if (nextActionAt && Number.isNaN(nextActionAt.getTime())) return json(res, 422, { error: 'Data da próxima ação inválida.' });
+      const reviewedAt = new Date().toISOString();
+      const result = db.prepare('UPDATE leads SET status = ?, review_notes = ?, next_action = ?, next_action_at = ?, reviewed_at = ? WHERE public_id = ?')
+        .run(status, reviewNotes, nextAction, nextActionAt?.toISOString() ?? null, reviewedAt, adminLeadMatch[1]);
+      if (!result.changes) return json(res, 404, { error: 'Lead não encontrado.' });
+      return json(res, 200, { ok: true, id: adminLeadMatch[1], status, reviewed_at: reviewedAt });
     }
     if (req.method === 'POST' && url.pathname === '/api/leads') {
       if (publicOrigin && req.headers.origin !== publicOrigin) return json(res, 403, { error: 'Origem inválida.' });
