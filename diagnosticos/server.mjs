@@ -162,8 +162,13 @@ function mime(path) {
 
 function staticFile(res, file) {
   try {
-    const body = readFileSync(file);
     const extension = extname(file);
+    let body = readFileSync(file);
+    if (extension === '.html') {
+      body = Buffer.from(body.toString('utf8')
+        .replaceAll('/assets/styles.css"', '/assets/styles.css?v=20260821-3"')
+        .replaceAll('class="brand-logo" src="/assets/h-talks-logo-light.png" alt="H-TALKS"', 'class="brand-logo" src="/assets/h-talks-logo-light.png" alt="H-TALKS" width="163" height="44"'));
+    }
     const cacheControl = extension === '.html' || extension === '.css'
       ? 'no-cache, must-revalidate'
       : 'public, max-age=86400';
