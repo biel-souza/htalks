@@ -29,6 +29,13 @@
 <div><strong data-metric="p1">0</strong><span>Prioridade P1</span></div>
 <div><strong data-metric="overdue">0</strong><span>Ações vencidas</span></div>
 </section>
+<p class="funnel-context">Distribuição global dos últimos 200 leads capturados. Os filtros abaixo alteram somente a tabela.</p>
+<section class="funnel-grid" aria-label="Distribuição dos últimos 200 leads">
+<article class="funnel-card"><div class="funnel-heading"><div><span>Oferta</span><h2>Leads capturados</h2></div><strong data-funnel-total>0</strong></div><div class="breakdown" data-breakdown="offer"></div></article>
+<article class="funnel-card"><div class="funnel-heading"><div><span>Qualidade</span><h2>Distribuição por prioridade</h2></div></div><div class="breakdown" data-breakdown="priority"></div></article>
+<article class="funnel-card"><div class="funnel-heading"><div><span>Pipeline</span><h2>Avanço por status</h2></div></div><div class="breakdown" data-breakdown="status"></div></article>
+<article class="funnel-card"><div class="funnel-heading"><div><span>Atribuição</span><h2>Top 6 origens/campanhas</h2></div></div><div class="breakdown" data-breakdown="source"></div></article>
+</section>
 <section class="queue-filters" aria-label="Filtros da fila">
 <input type="search" data-filter="search" placeholder="Buscar empresa, lead, e-mail ou ID">
 <select data-filter="status"><option value="">Todos os status</option><option value="novo">Novo</option><option value="em_contato">Em contato</option><option value="qualificado">Qualificado</option><option value="reuniao">Reunião</option><option value="ganho">Ganho</option><option value="perdido">Perdido</option></select>
@@ -55,7 +62,7 @@
 </tbody>
 </table>
 </main>
-<script src="/assets/admin.js?v=20260821-2" defer>
+<script src="/assets/admin.js?v=20260821-3" defer>
 </script>
 </body>
 </html>

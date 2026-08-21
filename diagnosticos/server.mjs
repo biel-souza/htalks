@@ -169,7 +169,7 @@ function staticFile(res, file) {
     let body = readFileSync(file);
     if (extension === '.html') {
       body = Buffer.from(body.toString('utf8')
-        .replaceAll('/assets/styles.css"', '/assets/styles.css?v=20260821-4"')
+        .replaceAll('/assets/styles.css"', '/assets/styles.css?v=20260821-5"')
         .replaceAll('class="brand-logo" src="/assets/h-talks-logo-light.png" alt="H-TALKS"', 'class="brand-logo" src="/assets/h-talks-logo-light.png" alt="H-TALKS" width="163" height="44"'));
     }
     const cacheControl = extension === '.html' || extension === '.css'
