@@ -182,6 +182,15 @@ export function createApp(options = {}) {
     const url = new URL(req.url, 'http://localhost');
     const routes = { '/': 'index.html', '/atendimento': 'atendimento.html', '/consultoria': 'consultoria.html', '/obrigado': 'obrigado.html', '/admin': 'admin.html' };
 
+    res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
+    res.setHeader('x-frame-options', 'DENY');
+    res.setHeader('permissions-policy', 'camera=(), microphone=(), geolocation=()');
+    res.setHeader('content-security-policy', "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; base-uri 'self'");
+
+    if (req.method === 'GET' && url.pathname === '/healthz') {
+      return json(res, 200, { status: 'ok' });
+    }
+
     if (req.method === 'GET' && routes[url.pathname]) {
       if (url.pathname === '/admin' && !authorized(req, adminUser, adminPassword)) {
         res.writeHead(401, { 'www-authenticate': 'Basic realm="H-TALKS Leads"' }).end('Autenticação necessária');

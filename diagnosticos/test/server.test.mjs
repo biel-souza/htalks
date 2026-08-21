@@ -41,6 +41,10 @@ test('captura lead pela API e lista no painel autenticado', async t => {
   t.after(() => app.close());
   const base = `http://127.0.0.1:${app.address().port}`;
 
+  const health = await fetch(`${base}/healthz`);
+  assert.equal(health.status, 200);
+  assert.deepEqual(await health.json(), { status: 'ok' });
+
   const created = await fetch(`${base}/api/leads`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ offer: 'atendimento', data: atendimento }) });
   assert.equal(created.status, 201);
   const result = await created.json();
