@@ -136,6 +136,17 @@ export function createDatabase(path) {
   const columns = new Set(db.prepare('PRAGMA table_info(leads)').all().map(column => column.name));
   if (!columns.has('next_action')) db.exec("ALTER TABLE leads ADD COLUMN next_action TEXT NOT NULL DEFAULT ''");
   if (!columns.has('next_action_at')) db.exec('ALTER TABLE leads ADD COLUMN next_action_at TEXT');
+  if (!columns.has('owner')) db.exec("ALTER TABLE leads ADD COLUMN owner TEXT NOT NULL DEFAULT ''");
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS lead_activities (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      lead_public_id TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      activity_type TEXT NOT NULL,
+      summary TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS lead_activities_idx ON lead_activities(lead_public_id, created_at DESC);
+  `);
   return db;
 }
 
@@ -169,7 +180,7 @@ function staticFile(res, file) {
     let body = readFileSync(file);
     if (extension === '.html') {
       body = Buffer.from(body.toString('utf8')
-        .replaceAll('/assets/styles.css"', '/assets/styles.css?v=20260821-5"')
+        .replaceAll('/assets/styles.css"', '/assets/styles.css?v=20260821-6"')
         .replaceAll('class="brand-logo" src="/assets/h-talks-logo-light.png" alt="H-TALKS"', 'class="brand-logo" src="/assets/h-talks-logo-light.png" alt="H-TALKS" width="163" height="44"'));
     }
     const cacheControl = extension === '.html' || extension === '.css'
@@ -222,10 +233,17 @@ export function createApp(options = {}) {
     }
     if (req.method === 'GET' && url.pathname === '/api/admin/leads') {
       if (!authorized(req, adminUser, adminPassword)) return json(res, 401, { error: 'Não autorizado.' });
-      const rows = db.prepare('SELECT public_id, created_at, offer, name, company, email, phone, score, priority, status, source, campaign, review_notes, reviewed_at, next_action, next_action_at, payload_json FROM leads ORDER BY created_at DESC LIMIT 200').all();
+      const rows = db.prepare('SELECT public_id, created_at, offer, name, company, email, phone, score, priority, status, source, campaign, review_notes, reviewed_at, next_action, next_action_at, owner, payload_json FROM leads ORDER BY created_at DESC LIMIT 200').all();
       return json(res, 200, { leads: rows.map(row => ({ ...row, payload: JSON.parse(row.payload_json), payload_json: undefined })) });
     }
     const adminLeadMatch = url.pathname.match(/^\/api\/admin\/leads\/(HT-[A-Z0-9-]+)$/);
+    if (req.method === 'GET' && adminLeadMatch) {
+      if (!authorized(req, adminUser, adminPassword)) return json(res, 401, { error: 'Não autorizado.' });
+      const lead = db.prepare('SELECT public_id, created_at, offer, name, company, email, phone, score, priority, status, source, campaign, review_notes, reviewed_at, next_action, next_action_at, owner, payload_json FROM leads WHERE public_id = ?').get(adminLeadMatch[1]);
+      if (!lead) return json(res, 404, { error: 'Lead não encontrado.' });
+      const activities = db.prepare('SELECT created_at, activity_type, summary FROM lead_activities WHERE lead_public_id = ? ORDER BY created_at DESC LIMIT 50').all(adminLeadMatch[1]);
+      return json(res, 200, { lead: { ...lead, payload: JSON.parse(lead.payload_json), payload_json: undefined }, activities });
+    }
     if (req.method === 'PATCH' && adminLeadMatch) {
       if (!authorized(req, adminUser, adminPassword)) return json(res, 401, { error: 'Não autorizado.' });
       if (publicOrigin && req.headers.origin && req.headers.origin !== publicOrigin) return json(res, 403, { error: 'Origem inválida.' });
@@ -241,13 +259,22 @@ export function createApp(options = {}) {
       if (!validStatuses.has(status)) return json(res, 422, { error: 'Status inválido.' });
       const reviewNotes = normalizeText(input.review_notes, 1000);
       const nextAction = normalizeText(input.next_action, 300);
+      const owner = normalizeText(input.owner, 100);
       const nextActionAt = input.next_action_at ? new Date(input.next_action_at) : null;
       if (nextActionAt && Number.isNaN(nextActionAt.getTime())) return json(res, 422, { error: 'Data da próxima ação inválida.' });
       const reviewedAt = new Date().toISOString();
-      const result = db.prepare('UPDATE leads SET status = ?, review_notes = ?, next_action = ?, next_action_at = ?, reviewed_at = ? WHERE public_id = ?')
-        .run(status, reviewNotes, nextAction, nextActionAt?.toISOString() ?? null, reviewedAt, adminLeadMatch[1]);
-      if (!result.changes) return json(res, 404, { error: 'Lead não encontrado.' });
-      return json(res, 200, { ok: true, id: adminLeadMatch[1], status, reviewed_at: reviewedAt });
+      const previous = db.prepare('SELECT status, review_notes, next_action, next_action_at, owner FROM leads WHERE public_id = ?').get(adminLeadMatch[1]);
+      if (!previous) return json(res, 404, { error: 'Lead não encontrado.' });
+      db.prepare('UPDATE leads SET status = ?, review_notes = ?, next_action = ?, next_action_at = ?, owner = ?, reviewed_at = ? WHERE public_id = ?')
+        .run(status, reviewNotes, nextAction, nextActionAt?.toISOString() ?? null, owner, reviewedAt, adminLeadMatch[1]);
+      const changes = [];
+      if (previous.status !== status) changes.push(`Status: ${previous.status} → ${status}`);
+      if (previous.owner !== owner) changes.push(`Responsável: ${previous.owner || 'não definido'} → ${owner || 'não definido'}`);
+      if (previous.next_action !== nextAction || previous.next_action_at !== (nextActionAt?.toISOString() ?? null)) changes.push(`Próxima ação: ${nextAction || 'não definida'}`);
+      if (previous.review_notes !== reviewNotes) changes.push('Observação interna atualizada');
+      db.prepare('INSERT INTO lead_activities (lead_public_id, created_at, activity_type, summary) VALUES (?, ?, ?, ?)')
+        .run(adminLeadMatch[1], reviewedAt, 'atualizacao', changes.join(' · ') || 'Lead revisado sem alteração de campos');
+      return json(res, 200, { ok: true, id: adminLeadMatch[1], status, owner, reviewed_at: reviewedAt });
     }
     if (req.method === 'POST' && url.pathname === '/api/leads') {
       if (publicOrigin && req.headers.origin !== publicOrigin) return json(res, 403, { error: 'Origem inválida.' });

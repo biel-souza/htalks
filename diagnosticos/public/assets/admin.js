@@ -5,7 +5,7 @@ const statusOptions=[['novo','Novo'],['em_contato','Em contato'],['qualificado',
 const closed=new Set(['ganho','perdido']);
 const overdue=lead=>Boolean(lead.next_action_at)&&!closed.has(lead.status)&&new Date(lead.next_action_at)<new Date();
 const localDate=value=>{if(!value)return'';const date=new Date(value);const pad=part=>String(part).padStart(2,'0');return`${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;};
-const management=lead=>`<div class="lead-management" data-id="${escapeHtml(lead.public_id)}"><select data-field="status" aria-label="Status do lead">${statusOptions.map(([value,label])=>`<option value="${value}"${lead.status===value?' selected':''}>${label}</option>`).join('')}</select><input data-field="next_action" value="${escapeHtml(lead.next_action||'')}" maxlength="300" placeholder="Próxima ação"><input data-field="next_action_at" type="datetime-local" value="${escapeHtml(localDate(lead.next_action_at))}" aria-label="Data da próxima ação"><textarea data-field="review_notes" maxlength="1000" placeholder="Observação interna">${escapeHtml(lead.review_notes||'')}</textarea><div class="management-actions"><button type="button" class="btn save-lead">Salvar</button><span class="save-status"></span></div></div>`;
+const management=lead=>`<div class="lead-management" data-id="${escapeHtml(lead.public_id)}"><input data-field="owner" value="${escapeHtml(lead.owner||'')}" maxlength="100" placeholder="Responsável"><select data-field="status" aria-label="Status do lead">${statusOptions.map(([value,label])=>`<option value="${value}"${lead.status===value?' selected':''}>${label}</option>`).join('')}</select><input data-field="next_action" value="${escapeHtml(lead.next_action||'')}" maxlength="300" placeholder="Próxima ação"><input data-field="next_action_at" type="datetime-local" value="${escapeHtml(localDate(lead.next_action_at))}" aria-label="Data da próxima ação"><textarea data-field="review_notes" maxlength="1000" placeholder="Observação interna">${escapeHtml(lead.review_notes||'')}</textarea><div class="management-actions"><button type="button" class="btn save-lead">Salvar</button><button type="button" class="history-lead">Histórico</button><span class="save-status"></span></div><div class="lead-history" hidden></div></div>`;
 let leads=[];let loadState='loading';
 
 function setMetrics(){
@@ -53,13 +53,22 @@ function showLoadError(){
 fetch('/api/admin/leads').then(async response=>{if(!response.ok)throw new Error('Falha ao carregar.');return response.json();}).then(result=>{leads=Array.isArray(result.leads)?result.leads:[];loadState='ready';filters.forEach(filter=>{filter.disabled=false;});setMetrics();setFunnelMetrics();render();}).catch(showLoadError);
 filters.forEach(filter=>filter.addEventListener(filter.type==='search'?'input':'change',render));
 body.addEventListener('click',async event=>{
+  const historyButton=event.target.closest('.history-lead');
+  if(historyButton){
+    const card=historyButton.closest('.lead-management');const target=card.querySelector('.lead-history');
+    if(!target.hidden){target.hidden=true;return;}
+    historyButton.disabled=true;target.hidden=false;target.textContent='Carregando histórico…';
+    try{const response=await fetch(`/api/admin/leads/${encodeURIComponent(card.dataset.id)}`);const result=await response.json();if(!response.ok)throw new Error(result.error||'Falha ao carregar.');target.innerHTML=result.activities.length?result.activities.map(item=>`<p><time>${escapeHtml(new Date(item.created_at).toLocaleString('pt-BR'))}</time>${escapeHtml(item.summary)}</p>`).join(''):'<p>Nenhuma atividade registrada.</p>';}
+    catch(error){target.textContent=error.message;}finally{historyButton.disabled=false;}
+    return;
+  }
   const button=event.target.closest('.save-lead');if(!button)return;
   const card=button.closest('.lead-management');const status=card.querySelector('.save-status');const value=field=>card.querySelector(`[data-field="${field}"]`).value;
   button.disabled=true;status.textContent='Salvando…';status.className='save-status';
   try{
-    const response=await fetch(`/api/admin/leads/${encodeURIComponent(card.dataset.id)}`,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({status:value('status'),next_action:value('next_action'),next_action_at:value('next_action_at')||null,review_notes:value('review_notes')})});
+    const response=await fetch(`/api/admin/leads/${encodeURIComponent(card.dataset.id)}`,{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({owner:value('owner'),status:value('status'),next_action:value('next_action'),next_action_at:value('next_action_at')||null,review_notes:value('review_notes')})});
     const result=await response.json();if(!response.ok)throw new Error(result.error||'Falha ao salvar.');
-    const lead=leads.find(item=>item.public_id===card.dataset.id);if(lead){lead.status=value('status');lead.next_action=value('next_action');lead.next_action_at=value('next_action_at')?new Date(value('next_action_at')).toISOString():null;lead.review_notes=value('review_notes');}
+    const lead=leads.find(item=>item.public_id===card.dataset.id);if(lead){lead.owner=value('owner');lead.status=value('status');lead.next_action=value('next_action');lead.next_action_at=value('next_action_at')?new Date(value('next_action_at')).toISOString():null;lead.review_notes=value('review_notes');}
     setMetrics();setFunnelMetrics();status.textContent='Salvo';status.className='save-status ok';setTimeout(render,500);
   }catch(error){status.textContent=error.message;status.className='save-status error';}
   finally{button.disabled=false;}
