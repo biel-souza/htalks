@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import vm from 'node:vm';
 import { createApp, scoreLead, validateLead } from '../server.mjs';
 
 const atendimento = {
@@ -103,4 +104,34 @@ test('expõe configuração do Pixel sem cache e permite somente origens Meta ne
   assert.match(page.headers.get('content-security-policy'), /https:\/\/connect\.facebook\.net/);
   assert.match(page.headers.get('content-security-policy'), /https:\/\/www\.facebook\.com/);
   assert.match(await page.text(), /meta-pixel-config\.js/);
+});
+
+test('dispara Lead uma vez somente após sucesso confirmado na mesma sessão', () => {
+  const script = readFileSync(new URL('../public/assets/success.js', import.meta.url), 'utf8');
+  const values = new Map();
+  const calls = [];
+  const makeContext = () => ({
+    location: { search: '?id=HT-20260825-AAAAAAAA&oferta=consultoria' },
+    URLSearchParams,
+    sessionStorage: {
+      getItem: key => values.get(key) ?? null,
+      setItem: (key, value) => values.set(key, value),
+      removeItem: key => values.delete(key)
+    },
+    document: { querySelector: () => null },
+    window: { fbq: (...args) => calls.push(args) },
+    encodeURIComponent
+  });
+
+  vm.runInNewContext(script, makeContext());
+  assert.equal(calls.length, 0);
+
+  values.set('htalks-lead:HT-20260825-AAAAAAAA', 'consultoria');
+  vm.runInNewContext(script, makeContext());
+  assert.equal(calls.length, 1);
+  assert.equal(calls[0][0], 'track');
+  assert.equal(calls[0][1], 'Lead');
+
+  vm.runInNewContext(script, makeContext());
+  assert.equal(calls.length, 1);
 });
