@@ -85,3 +85,22 @@ test('captura lead pela API e lista no painel autenticado', async t => {
   });
   assert.equal(invalidStatus.status, 422);
 });
+
+test('expõe configuração do Pixel sem cache e permite somente origens Meta necessárias', async t => {
+  const temp = mkdtempSync(join(tmpdir(), 'htalks-pixel-'));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const app = createApp({ databasePath: join(temp, 'leads.sqlite'), metaPixelId: '1581798300311764' });
+  await new Promise(resolve => app.listen(0, '127.0.0.1', resolve));
+  t.after(() => app.close());
+  const base = `http://127.0.0.1:${app.address().port}`;
+
+  const config = await fetch(`${base}/assets/meta-pixel-config.js`);
+  assert.equal(config.status, 200);
+  assert.equal(config.headers.get('cache-control'), 'no-store');
+  assert.equal(await config.text(), 'window.HTALKS_META_PIXEL_ID="1581798300311764";');
+
+  const page = await fetch(`${base}/consultoria`);
+  assert.match(page.headers.get('content-security-policy'), /https:\/\/connect\.facebook\.net/);
+  assert.match(page.headers.get('content-security-policy'), /https:\/\/www\.facebook\.com/);
+  assert.match(await page.text(), /meta-pixel-config\.js/);
+});

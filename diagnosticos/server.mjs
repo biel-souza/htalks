@@ -156,6 +156,15 @@ function json(res, status, payload) {
   res.end(body);
 }
 
+function javascript(res, body) {
+  res.writeHead(200, {
+    'content-type': 'text/javascript; charset=utf-8',
+    'cache-control': 'no-store',
+    'x-content-type-options': 'nosniff'
+  });
+  res.end(body);
+}
+
 function safeEqual(a, b) {
   const left = Buffer.from(a);
   const right = Buffer.from(b);
@@ -179,9 +188,13 @@ function staticFile(res, file) {
     const extension = extname(file);
     let body = readFileSync(file);
     if (extension === '.html') {
-      body = Buffer.from(body.toString('utf8')
+      let html = body.toString('utf8')
         .replaceAll('/assets/styles.css"', '/assets/styles.css?v=20260821-6"')
-        .replaceAll('class="brand-logo" src="/assets/h-talks-logo-light.png" alt="H-TALKS"', 'class="brand-logo" src="/assets/h-talks-logo-light.png" alt="H-TALKS" width="163" height="44"'));
+        .replaceAll('class="brand-logo" src="/assets/h-talks-logo-light.png" alt="H-TALKS"', 'class="brand-logo" src="/assets/h-talks-logo-light.png" alt="H-TALKS" width="163" height="44"');
+      if (!file.endsWith('admin.html') && !html.includes('/assets/meta-pixel-config.js')) {
+        html = html.replace('</head>', '<script src="/assets/meta-pixel-config.js" defer></script><script src="/assets/meta-pixel.js?v=20260825-1" defer></script></head>');
+      }
+      body = Buffer.from(html);
     }
     const cacheControl = extension === '.html' || extension === '.css'
       ? 'no-cache, must-revalidate'
@@ -203,6 +216,7 @@ export function createApp(options = {}) {
   const adminPassword = options.adminPassword ?? process.env.ADMIN_PASSWORD ?? '';
   const hashSecret = options.hashSecret ?? process.env.LEAD_HASH_SECRET ?? 'local-development-only';
   const publicOrigin = options.publicOrigin ?? process.env.PUBLIC_ORIGIN ?? '';
+  const metaPixelId = normalizeText(options.metaPixelId ?? process.env.META_PIXEL_ID ?? '', 32).replace(/\D/g, '');
   const rate = new Map();
 
   return http.createServer(async (req, res) => {
@@ -212,10 +226,14 @@ export function createApp(options = {}) {
     res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
     res.setHeader('x-frame-options', 'DENY');
     res.setHeader('permissions-policy', 'camera=(), microphone=(), geolocation=()');
-    res.setHeader('content-security-policy', "default-src 'self'; style-src 'self'; script-src 'self'; img-src 'self' data:; form-action 'self'; frame-ancestors 'none'; base-uri 'self'");
+    res.setHeader('content-security-policy', "default-src 'self'; style-src 'self'; script-src 'self' https://connect.facebook.net; connect-src 'self' https://www.facebook.com https://connect.facebook.net; img-src 'self' data: https://www.facebook.com; form-action 'self'; frame-ancestors 'none'; base-uri 'self'");
 
     if (req.method === 'GET' && url.pathname === '/healthz') {
       return json(res, 200, { status: 'ok' });
+    }
+
+    if (req.method === 'GET' && url.pathname === '/assets/meta-pixel-config.js') {
+      return javascript(res, `window.HTALKS_META_PIXEL_ID=${JSON.stringify(metaPixelId)};`);
     }
 
     if (req.method === 'GET' && routes[url.pathname]) {
