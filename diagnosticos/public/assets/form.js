@@ -8,6 +8,13 @@ for(const key of tracked){
   if(input) input.value=params.get(key)||'';
 }
 
+const formStartKey=`htalks-form-start:${form?.dataset.offer||'unknown'}:${params.get('utm_campaign')||location.pathname}`;
+form?.addEventListener('focusin',()=>{
+  if(sessionStorage.getItem(formStartKey)) return;
+  sessionStorage.setItem(formStartKey,'1');
+  if(typeof window.fbq==='function') window.fbq('trackCustom','DiagnosticFormStart',{content_name:form.dataset.offer});
+},{once:true});
+
 function payloadFromForm(form){
   const fd=new FormData(form);const data={};
   for(const [key,value] of fd){

@@ -65,6 +65,19 @@ export function scoreLead(offer, data) {
 export function validateLead(offer, data) {
   const errors = {};
   if (!['atendimento', 'consultoria'].includes(offer)) errors.offer = 'Oferta inválida.';
+  const shortMetaLanding = offer === 'atendimento' && ['meta_short_v1', 'meta_short_v2'].includes(data.landing_variant);
+  if (shortMetaLanding) {
+    const required = data.landing_variant === 'meta_short_v2'
+      ? ['name', 'company', 'bottleneck']
+      : ['name', 'company', 'bottleneck', 'urgency'];
+    for (const field of required) {
+      if (!filled(data[field])) errors[field] = 'Campo obrigatório.';
+    }
+    if (!validPhone(data.phone)) errors.phone = 'Informe um WhatsApp válido com DDD.';
+    if (data.consent !== true) errors.consent = 'O consentimento é obrigatório.';
+    if (filled(data.website)) errors.spam = 'Submissão recusada.';
+    return errors;
+  }
   for (const field of ['name', 'company', 'role']) {
     if (!filled(data[field])) errors[field] = 'Campo obrigatório.';
   }
@@ -221,7 +234,7 @@ export function createApp(options = {}) {
 
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
-    const routes = { '/': 'index.html', '/atendimento': 'atendimento.html', '/consultoria': 'consultoria.html', '/obrigado': 'obrigado.html', '/admin': 'admin.html' };
+    const routes = { '/': 'index.html', '/atendimento': 'atendimento.html', '/atendimento-rapido': 'atendimento-rapido.html', '/atendimento-rapido-v2': 'atendimento-rapido-v2.html', '/consultoria': 'consultoria.html', '/obrigado': 'obrigado.html', '/admin': 'admin.html' };
 
     res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
     res.setHeader('x-frame-options', 'DENY');
