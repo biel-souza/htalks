@@ -121,6 +121,11 @@ test('expõe configuração do Pixel sem cache e permite somente origens Meta ne
   assert.match(quickHtml, /meta_short_v2/);
   assert.match(quickHtml, /meta-pixel-config\.js/);
   assert.match(quickHtml, /meta-pixel\.js/);
+
+  const currentQuickPage = await fetch(`${base}/atendimento-rapido`);
+  assert.match(await currentQuickPage.text(), /meta_short_v2/);
+  const rollbackQuickPage = await fetch(`${base}/atendimento-rapido-v1`);
+  assert.match(await rollbackQuickPage.text(), /meta_short_v1/);
 });
 
 test('dispara Lead uma vez somente após sucesso confirmado na mesma sessão', () => {

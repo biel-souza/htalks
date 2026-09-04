@@ -234,7 +234,7 @@ export function createApp(options = {}) {
 
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
-    const routes = { '/': 'index.html', '/atendimento': 'atendimento.html', '/atendimento-rapido': 'atendimento-rapido.html', '/atendimento-rapido-v2': 'atendimento-rapido-v2.html', '/consultoria': 'consultoria.html', '/obrigado': 'obrigado.html', '/admin': 'admin.html' };
+    const routes = { '/': 'index.html', '/atendimento': 'atendimento.html', '/atendimento-rapido': 'atendimento-rapido-v2.html', '/atendimento-rapido-v1': 'atendimento-rapido.html', '/atendimento-rapido-v2': 'atendimento-rapido-v2.html', '/consultoria': 'consultoria.html', '/obrigado': 'obrigado.html', '/admin': 'admin.html' };
 
     res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
     res.setHeader('x-frame-options', 'DENY');
