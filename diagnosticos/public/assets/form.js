@@ -8,6 +8,13 @@ for(const key of tracked){
   if(input) input.value=params.get(key)||'';
 }
 
+const formStartKey=`htalks-form-start:${form?.dataset.offer||'unknown'}:${params.get('utm_campaign')||location.pathname}`;
+form?.addEventListener('focusin',()=>{
+  if(sessionStorage.getItem(formStartKey)) return;
+  sessionStorage.setItem(formStartKey,'1');
+  if(typeof window.fbq==='function') window.fbq('trackCustom','DiagnosticFormStart',{content_name:form.dataset.offer});
+},{once:true});
+
 function payloadFromForm(form){
   const fd=new FormData(form);const data={};
   for(const [key,value] of fd){
@@ -24,6 +31,8 @@ form?.addEventListener('submit',async event=>{
   const button=form.querySelector('button[type=submit]');button.disabled=true;
   try{
     const response=await fetch('/api/leads',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payloadFromForm(form))});
+    const contentType=response.headers.get('content-type')||'';
+    if(!contentType.includes('application/json')) throw new Error('O serviço ficou indisponível por alguns segundos. Tente novamente.');
     const result=await response.json();
     if(!response.ok) throw new Error(result.error||'Não foi possível enviar.');
     sessionStorage.setItem(`htalks-lead:${result.id}`,form.dataset.offer);

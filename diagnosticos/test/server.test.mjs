@@ -87,6 +87,37 @@ test('captura lead pela API e lista no painel autenticado', async t => {
   assert.equal(invalidStatus.status, 422);
 });
 
+test('valida as landings curtas do Meta com escopo próprio', () => {
+  const v1 = { landing_variant: 'meta_short_v1', name: 'Rafael', company: 'HEADS', phone: '47999999999', bottleneck: 'context', urgency: '30d', consent: true };
+  const v2 = { landing_variant: 'meta_short_v2', name: 'Rafael', company: 'HEADS', phone: '47999999999', bottleneck: 'context', consent: true };
+  assert.deepEqual(validateLead('atendimento', v1), {});
+  assert.deepEqual(validateLead('atendimento', v2), {});
+  assert.ok(validateLead('atendimento', { ...v1, urgency: '' }).urgency);
+  assert.equal(validateLead('atendimento', { ...v2, urgency: '' }).urgency, undefined);
+  assert.ok(validateLead('atendimento', { ...v2, phone: '1' }).phone);
+});
+
+test('captura lead da landing curta sem e-mail e mantém o serviço saudável', async t => {
+  const temp = mkdtempSync(join(tmpdir(), 'htalks-short-lead-'));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const app = createApp({ databasePath: join(temp, 'leads.sqlite'), hashSecret: 'teste' });
+  await new Promise(resolve => app.listen(0, '127.0.0.1', resolve));
+  t.after(() => app.close());
+  const base = `http://127.0.0.1:${app.address().port}`;
+  const data = {
+    landing_variant: 'meta_short_v2', name: 'Rafael Andrade', company: 'HEADS',
+    phone: '47999999999', bottleneck: 'context', consent: true
+  };
+
+  const created = await fetch(`${base}/api/leads`, {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ offer: 'atendimento', data })
+  });
+  assert.equal(created.status, 201);
+  assert.match((await created.json()).id, /^HT-/);
+  assert.equal((await fetch(`${base}/healthz`)).status, 200);
+});
+
 test('expõe configuração do Pixel sem cache e permite somente origens Meta necessárias', async t => {
   const temp = mkdtempSync(join(tmpdir(), 'htalks-pixel-'));
   t.after(() => rmSync(temp, { recursive: true, force: true }));
@@ -104,6 +135,22 @@ test('expõe configuração do Pixel sem cache e permite somente origens Meta ne
   assert.match(page.headers.get('content-security-policy'), /https:\/\/connect\.facebook\.net/);
   assert.match(page.headers.get('content-security-policy'), /https:\/\/www\.facebook\.com/);
   assert.match(await page.text(), /meta-pixel-config\.js/);
+
+  const quickPage = await fetch(`${base}/atendimento-rapido-v2`);
+  assert.equal(quickPage.status, 200);
+  const quickHtml = await quickPage.text();
+  assert.match(quickHtml, /meta_short_v2/);
+  assert.match(quickHtml, /meta-pixel-config\.js/);
+  assert.match(quickHtml, /meta-pixel\.js/);
+
+  const currentQuickPage = await fetch(`${base}/atendimento-rapido`);
+  assert.match(await currentQuickPage.text(), /meta_short_v2/);
+  const rollbackQuickPage = await fetch(`${base}/atendimento-rapido-v1`);
+  assert.match(await rollbackQuickPage.text(), /meta_short_v1/);
+
+  const headQuickPage = await fetch(`${base}/atendimento-rapido`, { method: 'HEAD' });
+  assert.equal(headQuickPage.status, 200);
+  assert.equal(await headQuickPage.text(), '');
 });
 
 test('dispara Lead uma vez somente após sucesso confirmado na mesma sessão', () => {
@@ -134,4 +181,11 @@ test('dispara Lead uma vez somente após sucesso confirmado na mesma sessão', (
 
   vm.runInNewContext(script, makeContext());
   assert.equal(calls.length, 1);
+});
+
+test('instrumenta o início do diagnóstico sem dados pessoais', () => {
+  const script = readFileSync(new URL('../public/assets/form.js', import.meta.url), 'utf8');
+  assert.match(script, /DiagnosticFormStart/);
+  const eventLine = script.split('\n').find(line => line.includes('DiagnosticFormStart')) ?? '';
+  assert.doesNotMatch(eventLine, /\b(name|phone|company)\s*:/);
 });

@@ -65,6 +65,19 @@ export function scoreLead(offer, data) {
 export function validateLead(offer, data) {
   const errors = {};
   if (!['atendimento', 'consultoria'].includes(offer)) errors.offer = 'Oferta inválida.';
+  const shortMetaLanding = offer === 'atendimento' && ['meta_short_v1', 'meta_short_v2'].includes(data.landing_variant);
+  if (shortMetaLanding) {
+    const required = data.landing_variant === 'meta_short_v2'
+      ? ['name', 'company', 'bottleneck']
+      : ['name', 'company', 'bottleneck', 'urgency'];
+    for (const field of required) {
+      if (!filled(data[field])) errors[field] = 'Campo obrigatório.';
+    }
+    if (!validPhone(data.phone)) errors.phone = 'Informe um WhatsApp válido com DDD.';
+    if (data.consent !== true) errors.consent = 'O consentimento é obrigatório.';
+    if (filled(data.website)) errors.spam = 'Submissão recusada.';
+    return errors;
+  }
   for (const field of ['name', 'company', 'role']) {
     if (!filled(data[field])) errors[field] = 'Campo obrigatório.';
   }
@@ -221,7 +234,7 @@ export function createApp(options = {}) {
 
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
-    const routes = { '/': 'index.html', '/atendimento': 'atendimento.html', '/consultoria': 'consultoria.html', '/obrigado': 'obrigado.html', '/admin': 'admin.html' };
+    const routes = { '/': 'index.html', '/atendimento': 'atendimento.html', '/atendimento-rapido': 'atendimento-rapido-v2.html', '/atendimento-rapido-v1': 'atendimento-rapido.html', '/atendimento-rapido-v2': 'atendimento-rapido-v2.html', '/consultoria': 'consultoria.html', '/obrigado': 'obrigado.html', '/admin': 'admin.html' };
 
     res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
     res.setHeader('x-frame-options', 'DENY');
@@ -236,7 +249,7 @@ export function createApp(options = {}) {
       return javascript(res, `window.HTALKS_META_PIXEL_ID=${JSON.stringify(metaPixelId)};`);
     }
 
-    if (req.method === 'GET' && routes[url.pathname]) {
+    if ((req.method === 'GET' || req.method === 'HEAD') && routes[url.pathname]) {
       if (url.pathname === '/admin' && !authorized(req, adminUser, adminPassword)) {
         res.writeHead(401, { 'www-authenticate': 'Basic realm="H-TALKS Leads"' }).end('Autenticação necessária');
         return;
@@ -244,7 +257,7 @@ export function createApp(options = {}) {
       staticFile(res, join(publicDir, routes[url.pathname]));
       return;
     }
-    if (req.method === 'GET' && url.pathname.startsWith('/assets/')) {
+    if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname.startsWith('/assets/')) {
       const name = url.pathname.slice('/assets/'.length).replace(/[^a-zA-Z0-9._-]/g, '');
       staticFile(res, join(publicDir, 'assets', name));
       return;
@@ -322,7 +335,7 @@ export function createApp(options = {}) {
       const publicId = `HT-${createdAt.slice(0, 10).replaceAll('-', '')}-${randomUUID().slice(0, 8).toUpperCase()}`;
       db.prepare(`INSERT INTO leads (public_id, created_at, offer, name, company, email, phone, score, priority, source, medium, campaign, content, landing_path, consent_at, ip_hash, payload_json)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
-        .run(publicId, createdAt, offer, clean.name, clean.company, clean.email, clean.phone, score, priority, clean.source ?? '', clean.medium ?? '', clean.campaign ?? '', clean.content ?? '', clean.landing_path ?? '', createdAt, ipHash, JSON.stringify(clean));
+        .run(publicId, createdAt, offer, clean.name, clean.company, clean.email ?? '', clean.phone, score, priority, clean.source ?? '', clean.medium ?? '', clean.campaign ?? '', clean.content ?? '', clean.landing_path ?? '', createdAt, ipHash, JSON.stringify(clean));
       return json(res, 201, { ok: true, id: publicId });
     }
     res.writeHead(404).end('Não encontrado');
