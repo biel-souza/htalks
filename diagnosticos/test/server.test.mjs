@@ -29,6 +29,16 @@ test('rejeita falta de consentimento e contato inválido', () => {
   assert.ok(errors.consent); assert.ok(errors.email); assert.ok(errors.phone);
 });
 
+test('valida as landings curtas do Meta com escopo próprio', () => {
+  const v1 = { landing_variant: 'meta_short_v1', name: 'Rafael', company: 'HEADS', phone: '47999999999', bottleneck: 'context', urgency: '30d', consent: true };
+  const v2 = { landing_variant: 'meta_short_v2', name: 'Rafael', company: 'HEADS', phone: '47999999999', bottleneck: 'context', consent: true };
+  assert.deepEqual(validateLead('atendimento', v1), {});
+  assert.deepEqual(validateLead('atendimento', v2), {});
+  assert.ok(validateLead('atendimento', { ...v1, urgency: '' }).urgency);
+  assert.equal(validateLead('atendimento', { ...v2, urgency: '' }).urgency, undefined);
+  assert.ok(validateLead('atendimento', { ...v2, phone: '1' }).phone);
+});
+
 test('classifica cenários fortes como P1', () => {
   assert.equal(scoreLead('atendimento', atendimento).priority, 'P1');
   assert.equal(scoreLead('consultoria', consultoria).priority, 'P1');
@@ -147,7 +157,6 @@ test('expõe configuração do Pixel sem cache e permite somente origens Meta ne
   assert.match(await currentQuickPage.text(), /meta_short_v2/);
   const rollbackQuickPage = await fetch(`${base}/atendimento-rapido-v1`);
   assert.match(await rollbackQuickPage.text(), /meta_short_v1/);
-
   const headQuickPage = await fetch(`${base}/atendimento-rapido`, { method: 'HEAD' });
   assert.equal(headQuickPage.status, 200);
   assert.equal(await headQuickPage.text(), '');
