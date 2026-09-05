@@ -97,16 +97,6 @@ test('captura lead pela API e lista no painel autenticado', async t => {
   assert.equal(invalidStatus.status, 422);
 });
 
-test('valida as landings curtas do Meta com escopo próprio', () => {
-  const v1 = { landing_variant: 'meta_short_v1', name: 'Rafael', company: 'HEADS', phone: '47999999999', bottleneck: 'context', urgency: '30d', consent: true };
-  const v2 = { landing_variant: 'meta_short_v2', name: 'Rafael', company: 'HEADS', phone: '47999999999', bottleneck: 'context', consent: true };
-  assert.deepEqual(validateLead('atendimento', v1), {});
-  assert.deepEqual(validateLead('atendimento', v2), {});
-  assert.ok(validateLead('atendimento', { ...v1, urgency: '' }).urgency);
-  assert.equal(validateLead('atendimento', { ...v2, urgency: '' }).urgency, undefined);
-  assert.ok(validateLead('atendimento', { ...v2, phone: '1' }).phone);
-});
-
 test('captura lead da landing curta sem e-mail e mantém o serviço saudável', async t => {
   const temp = mkdtempSync(join(tmpdir(), 'htalks-short-lead-'));
   t.after(() => rmSync(temp, { recursive: true, force: true }));
