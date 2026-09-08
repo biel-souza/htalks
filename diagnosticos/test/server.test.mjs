@@ -65,7 +65,11 @@ test('publica formulário NPS, persiste resposta e permite consulta autenticada'
 
   const page = await fetch(`${base}/nps`);
   assert.equal(page.status, 200);
-  assert.match(await page.text(), /submitUrl:\s*"\/api\/nps"/);
+  const pageHtml = await page.text();
+  assert.match(pageHtml, /submitUrl:\s*"\/api\/nps"/);
+  assert.match(pageHtml, /<script nonce="[a-f0-9]+">/);
+  assert.match(page.headers.get('content-security-policy'), /style-src 'self' 'unsafe-inline'/);
+  assert.match(page.headers.get('content-security-policy'), /script-src 'self' 'nonce-[a-f0-9]+'/);
   const assetLogo = await fetch(`${base}/assets/htalks-logo-navy.png`);
   assert.equal(assetLogo.status, 200);
   assert.equal(assetLogo.headers.get('content-type'), 'image/png');

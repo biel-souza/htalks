@@ -227,7 +227,7 @@ function mime(path) {
   return ({ '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png' })[extname(path)] ?? 'application/octet-stream';
 }
 
-function staticFile(res, file) {
+function staticFile(res, file, nonce = '') {
   try {
     const extension = extname(file);
     let body = readFileSync(file);
@@ -238,6 +238,7 @@ function staticFile(res, file) {
       if (!file.endsWith('admin.html') && !html.includes('/assets/meta-pixel-config.js')) {
         html = html.replace('</head>', '<script src="/assets/meta-pixel-config.js" defer></script><script src="/assets/meta-pixel.js?v=20260825-1" defer></script></head>');
       }
+      if (nonce) html = html.replaceAll('<script>', `<script nonce="${nonce}">`);
       body = Buffer.from(html);
     }
     const cacheControl = extension === '.html' || extension === '.css'
@@ -265,12 +266,15 @@ export function createApp(options = {}) {
 
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
+    const nonce = randomUUID().replaceAll('-', '');
     const routes = { '/': 'index.html', '/atendimento': 'atendimento.html', '/atendimento-rapido': 'atendimento-rapido-v2.html', '/atendimento-rapido-v1': 'atendimento-rapido.html', '/atendimento-rapido-v2': 'atendimento-rapido-v2.html', '/consultoria': 'consultoria.html', '/nps': 'nps.html', '/obrigado': 'obrigado.html', '/admin': 'admin.html' };
 
     res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
     res.setHeader('x-frame-options', 'DENY');
     res.setHeader('permissions-policy', 'camera=(), microphone=(), geolocation=()');
-    res.setHeader('content-security-policy', "default-src 'self'; style-src 'self'; script-src 'self' https://connect.facebook.net; connect-src 'self' https://www.facebook.com https://connect.facebook.net; img-src 'self' data: https://www.facebook.com; form-action 'self'; frame-ancestors 'none'; base-uri 'self'");
+    const stylePolicy = url.pathname === '/nps' ? "style-src 'self' 'unsafe-inline'" : "style-src 'self'";
+    const scriptPolicy = url.pathname === '/nps' ? `script-src 'self' 'nonce-${nonce}' https://connect.facebook.net` : "script-src 'self' https://connect.facebook.net";
+    res.setHeader('content-security-policy', `default-src 'self'; ${stylePolicy}; ${scriptPolicy}; connect-src 'self' https://www.facebook.com https://connect.facebook.net; img-src 'self' data: https://www.facebook.com; form-action 'self'; frame-ancestors 'none'; base-uri 'self'`);
 
     if (req.method === 'GET' && url.pathname === '/healthz') {
       return json(res, 200, { status: 'ok' });
@@ -285,7 +289,7 @@ export function createApp(options = {}) {
         res.writeHead(401, { 'www-authenticate': 'Basic realm="H-TALKS Leads"' }).end('Autenticação necessária');
         return;
       }
-      staticFile(res, join(publicDir, routes[url.pathname]));
+      staticFile(res, join(publicDir, routes[url.pathname]), url.pathname === '/nps' ? nonce : '');
       return;
     }
     if ((req.method === 'GET' || req.method === 'HEAD') && url.pathname.startsWith('/assets/')) {
