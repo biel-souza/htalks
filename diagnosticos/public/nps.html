@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta name="theme-color" content="#081b36">
+  <title>Pesquisa de experiência | H-TALKS</title>
+  <style>
+    :root {
+      --navy: #071a35;
+      --navy-2: #102b4d;
+      --orange: #18d7ee;
+      --orange-soft: #e9fbfe;
+      --violet: #6857f5;
+      --cream: #f4f7fb;
+      --paper: #ffffff;
+      --ink: #162337;
+      --muted: #667085;
+      --line: #dfe4eb;
+      --success: #087a55;
+      --danger: #b42318;
+      --shadow: 0 18px 60px rgba(8, 27, 54, .12);
+      --radius: 22px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 8% 4%, rgba(24, 215, 238, .11), transparent 28rem),
+        linear-gradient(145deg, #f8fbff 0%, var(--cream) 100%);
+      font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.5;
+    }
+
+    button, input, textarea { font: inherit; }
+
+    .shell {
+      width: min(100% - 32px, 820px);
+      margin: 34px auto 64px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      margin-bottom: 18px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--navy);
+      min-width: 0;
+    }
+
+    .brand-logo { display: block; width: min(230px, 48vw); height: auto; }
+
+    .time-pill, .preview-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 11px;
+      color: #475467;
+      background: rgba(255, 255, 255, .72);
+      border: 1px solid rgba(8, 27, 54, .1);
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .preview-pill {
+      display: none;
+      margin-top: 14px;
+      color: #9a3412;
+      background: #fff7ed;
+      border-color: #fed7aa;
+    }
+
+    .preview-pill.is-visible { display: inline-flex; }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      padding: clamp(28px, 6vw, 54px);
+      color: #fff;
+      background: linear-gradient(135deg, var(--navy), #102b4d);
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 250px;
+      height: 250px;
+      right: -90px;
+      top: -105px;
+      background: var(--violet);
+      border-radius: 42% 58% 64% 36% / 46% 37% 63% 54%;
+      opacity: .9;
+    }
+
+    .eyebrow {
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+      margin: 0 0 14px;
+      color: var(--orange);
+      font-size: 12px;
+      font-weight: 850;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      position: relative;
+      z-index: 1;
+      max-width: 620px;
+      margin: 0;
+      font-size: clamp(34px, 7vw, 56px);
+      line-height: 1.02;
+      letter-spacing: -.055em;
+    }
+
+    .hero p {
+      position: relative;
+      z-index: 1;
+      max-width: 600px;
+      margin: 18px 0 0;
+      color: #dbe5f1;
+      font-size: clamp(16px, 2.4vw, 19px);
+    }
+
+    .progress-wrap {
+      padding: 20px clamp(22px, 5vw, 46px);
+      background: #fff;
+      border-inline: 1px solid var(--line);
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .progress-track {
+      height: 7px;
+      overflow: hidden;
+      background: #edf0f4;
+      border-radius: 999px;
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      background: linear-gradient(90deg, var(--orange), var(--violet));
+      border-radius: inherit;
+      transition: width .25s ease;
+    }
+
+    form {
+      padding: clamp(22px, 5vw, 46px);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-top: 0;
+      border-radius: 0 0 var(--radius) var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    fieldset {
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+      border: 0;
+    }
+
+    .section + .section {
+      margin-top: 36px;
+      padding-top: 34px;
+      border-top: 1px solid var(--line);
+    }
+
+    .step {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      margin-bottom: 12px;
+      color: var(--orange);
+      background: var(--orange-soft);
+      border-radius: 9px;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    legend, .question-title {
+      display: block;
+      width: 100%;
+      margin: 0 0 8px;
+      padding: 0;
+      color: var(--navy);
+      font-size: clamp(19px, 3vw, 23px);
+      font-weight: 820;
+      line-height: 1.25;
+      letter-spacing: -.025em;
+    }
+
+    .hint {
+      margin: 0 0 17px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .required { color: var(--orange); }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+
+    label.control-label {
+      display: block;
+      margin-bottom: 7px;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    input[type="text"], textarea {
+      width: 100%;
+      color: var(--ink);
+      background: #fff;
+      border: 1px solid #cfd6df;
+      border-radius: 12px;
+      outline: none;
+      transition: border-color .15s, box-shadow .15s;
+    }
+
+    input[type="text"] { min-height: 48px; padding: 0 14px; }
+    textarea { min-height: 120px; padding: 13px 14px; resize: vertical; }
+
+    input:focus, textarea:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 4px rgba(24, 215, 238, .15);
+    }
+
+    .nps-grid {
+      display: grid;
+      grid-template-columns: repeat(11, 1fr);
+      gap: 7px;
+      margin-top: 18px;
+    }
+
+    .nps-option { position: relative; }
+    .nps-option input { position: absolute; opacity: 0; pointer-events: none; }
+
+    .nps-option label {
+      display: grid;
+      place-items: center;
+      aspect-ratio: 1;
+      min-height: 42px;
+      color: var(--navy);
+      background: #f8fafc;
+      border: 1px solid #d9e0e8;
+      border-radius: 11px;
+      cursor: pointer;
+      font-weight: 820;
+      transition: transform .12s, border-color .12s, background .12s, color .12s;
+    }
+
+    .nps-option label:hover { transform: translateY(-2px); border-color: #aeb8c5; }
+    .nps-option input:focus-visible + label { outline: 3px solid rgba(24, 215, 238, .28); outline-offset: 2px; }
+    .nps-option input:checked + label { color: #fff; background: var(--violet); border-color: var(--violet); }
+
+    .scale-labels {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-top: 9px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .choices { display: grid; gap: 10px; margin-top: 16px; }
+
+    .choice { position: relative; }
+    .choice input { position: absolute; opacity: 0; pointer-events: none; }
+
+    .choice label {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 13px 14px;
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: border-color .12s, background .12s;
+    }
+
+    .choice label::before {
+      content: "";
+      flex: 0 0 auto;
+      width: 17px;
+      height: 17px;
+      border: 2px solid #aeb8c5;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 4px #fff;
+    }
+
+    .choice input:checked + label { color: var(--navy); background: var(--orange-soft); border-color: #75e7f3; }
+    .choice input:checked + label::before { background: var(--violet); border-color: var(--violet); }
+    .choice input:focus-visible + label { outline: 3px solid rgba(24, 215, 238, .24); }
+
+    .other-field { display: none; margin-top: 10px; }
+    .other-field.is-visible { display: block; }
+
+    .privacy {
+      display: flex;
+      gap: 11px;
+      margin-top: 34px;
+      padding: 15px;
+      color: #475467;
+      background: #f8fafc;
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .privacy svg { flex: 0 0 auto; width: 19px; height: 19px; color: var(--navy); }
+
+    .actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-top: 24px;
+    }
+
+    .submit-button, .download-button {
+      min-height: 50px;
+      padding: 0 22px;
+      border: 0;
+      border-radius: 13px;
+      cursor: pointer;
+      font-weight: 820;
+      transition: transform .12s, box-shadow .12s, opacity .12s;
+    }
+
+    .submit-button {
+      color: #fff;
+      background: var(--violet);
+      box-shadow: 0 10px 22px rgba(104, 87, 245, .25);
+    }
+
+    .submit-button:hover { transform: translateY(-1px); box-shadow: 0 13px 28px rgba(104, 87, 245, .3); }
+    .submit-button:disabled { cursor: wait; opacity: .65; transform: none; }
+    .microcopy { color: var(--muted); font-size: 12px; }
+
+    .status {
+      display: none;
+      margin-top: 20px;
+      padding: 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .status.is-visible { display: block; }
+    .status.success { color: var(--success); background: #ecfdf3; border: 1px solid #a6f4c5; }
+    .status.error { color: var(--danger); background: #fef3f2; border: 1px solid #fecdca; }
+
+    .download-button {
+      display: none;
+      margin-top: 12px;
+      color: var(--navy);
+      background: #fff;
+      border: 1px solid #cfd6df;
+    }
+
+    .download-button.is-visible { display: inline-block; }
+
+    footer {
+      max-width: 650px;
+      margin: 22px auto 0;
+      color: var(--muted);
+      text-align: center;
+      font-size: 12px;
+    }
+
+    @media (max-width: 680px) {
+      .shell { width: min(100% - 20px, 820px); margin-top: 18px; }
+      .topbar { padding-inline: 4px; }
+      .time-pill { font-size: 11px; }
+      .hero::after { width: 180px; height: 180px; right: -85px; top: -85px; }
+      .grid-2 { grid-template-columns: 1fr; }
+      .nps-grid { grid-template-columns: repeat(6, 1fr); }
+      .nps-option:last-child { grid-column: auto; }
+      .actions { align-items: stretch; flex-direction: column-reverse; }
+      .submit-button { width: 100%; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <div class="topbar">
+      <div class="brand" aria-label="H-TALKS">
+        <img class="brand-logo" src="/assets/htalks-logo-navy.png" alt="H-TALKS">
+      </div>
+      <span class="time-pill" aria-label="Tempo estimado de preenchimento">◷ Menos de 2 minutos</span>
+    </div>
+
+    <section class="hero">
+      <p class="eyebrow">Sua experiência importa</p>
+      <h1>Ajude-nos a construir um H-TALKS melhor.</h1>
+      <p>São quatro perguntas rápidas. Sua resposta orientará as próximas melhorias do produto e do nosso atendimento.</p>
+      <span id="previewPill" class="preview-pill">Modo de prévia — respostas não são enviadas</span>
+    </section>
+
+    <div class="progress-wrap" aria-hidden="true">
+      <div class="progress-label"><span>Progresso da pesquisa</span><span id="progressText">0%</span></div>
+      <div class="progress-track"><div id="progressBar" class="progress-bar"></div></div>
+    </div>
+
+    <form id="npsForm" novalidate>
+      <section class="section" aria-labelledby="identificacaoTitle">
+        <span class="step">01</span>
+        <h2 id="identificacaoTitle" class="question-title">Antes de começar</h2>
+        <p class="hint">Esses dados nos ajudam a acompanhar cada experiência de forma responsável.</p>
+        <div class="grid-2">
+          <div>
+            <label class="control-label" for="empresa">Empresa <span class="required">*</span></label>
+            <input id="empresa" name="empresa" type="text" autocomplete="organization" required placeholder="Nome da empresa">
+          </div>
+          <div>
+            <label class="control-label" for="respondente">Seu nome <span class="required">*</span></label>
+            <input id="respondente" name="respondente" type="text" autocomplete="name" required placeholder="Como podemos te chamar?">
+          </div>
+        </div>
+        <div style="margin-top:16px">
+          <label class="control-label" for="cargo">Função ou cargo <span style="font-weight:500;color:var(--muted)">(opcional)</span></label>
+          <input id="cargo" name="cargo" type="text" autocomplete="organization-title" placeholder="Ex.: Gestor comercial">
+        </div>
+      </section>
+
+      <section class="section" data-question="nps" aria-labelledby="npsTitle">
+        <span class="step">02</span>
+        <h2 id="npsTitle" class="question-title">Em uma escala de 0 a 10, qual é a probabilidade de você recomendar o H-TALKS para outra empresa? <span class="required">*</span></h2>
+        <p class="hint">Escolha uma nota abaixo.</p>
+        <div class="nps-grid" role="radiogroup" aria-labelledby="npsTitle">
+          <div class="nps-option"><input id="nps0" name="nps" type="radio" value="0" required><label for="nps0">0</label></div>
+          <div class="nps-option"><input id="nps1" name="nps" type="radio" value="1"><label for="nps1">1</label></div>
+          <div class="nps-option"><input id="nps2" name="nps" type="radio" value="2"><label for="nps2">2</label></div>
+          <div class="nps-option"><input id="nps3" name="nps" type="radio" value="3"><label for="nps3">3</label></div>
+          <div class="nps-option"><input id="nps4" name="nps" type="radio" value="4"><label for="nps4">4</label></div>
+          <div class="nps-option"><input id="nps5" name="nps" type="radio" value="5"><label for="nps5">5</label></div>
+          <div class="nps-option"><input id="nps6" name="nps" type="radio" value="6"><label for="nps6">6</label></div>
+          <div class="nps-option"><input id="nps7" name="nps" type="radio" value="7"><label for="nps7">7</label></div>
+          <div class="nps-option"><input id="nps8" name="nps" type="radio" value="8"><label for="nps8">8</label></div>
+          <div class="nps-option"><input id="nps9" name="nps" type="radio" value="9"><label for="nps9">9</label></div>
+          <div class="nps-option"><input id="nps10" name="nps" type="radio" value="10"><label for="nps10">10</label></div>
+        </div>
+        <div class="scale-labels"><span>0 — Nada provável</span><span>10 — Extremamente provável</span></div>
+      </section>
+
+      <section class="section" data-question="motivo">
+        <span class="step">03</span>
+        <label class="question-title" for="motivo">Qual é o principal motivo da sua nota? <span class="required">*</span></label>
+        <p class="hint">Conte o que mais influenciou sua avaliação.</p>
+        <textarea id="motivo" name="motivo" required maxlength="1200" placeholder="Escreva sua resposta..."></textarea>
+      </section>
+
+      <section class="section" data-question="resultado" aria-labelledby="resultadoTitle">
+        <span class="step">04</span>
+        <h2 id="resultadoTitle" class="question-title">Qual foi o principal resultado que o H-TALKS trouxe para sua operação até agora? <span class="required">*</span></h2>
+        <p class="hint">Selecione a alternativa mais importante para você.</p>
+        <div class="choices" role="radiogroup" aria-labelledby="resultadoTitle">
+          <div class="choice"><input id="r1" name="resultado" type="radio" value="Atendimento mais organizado" required><label for="r1">Atendimento mais organizado</label></div>
+          <div class="choice"><input id="r2" name="resultado" type="radio" value="Mais agilidade nas respostas"><label for="r2">Mais agilidade nas respostas</label></div>
+          <div class="choice"><input id="r3" name="resultado" type="radio" value="Redução de conversas ou oportunidades esquecidas"><label for="r3">Redução de conversas ou oportunidades esquecidas</label></div>
+          <div class="choice"><input id="r4" name="resultado" type="radio" value="Mais segurança e estabilidade na operação do WhatsApp"><label for="r4">Mais segurança e estabilidade na operação do WhatsApp</label></div>
+          <div class="choice"><input id="r5" name="resultado" type="radio" value="Maior produtividade da equipe"><label for="r5">Maior produtividade da equipe</label></div>
+          <div class="choice"><input id="r6" name="resultado" type="radio" value="Melhor acompanhamento de clientes e oportunidades"><label for="r6">Melhor acompanhamento de clientes e oportunidades</label></div>
+          <div class="choice"><input id="r7" name="resultado" type="radio" value="Ainda não percebemos resultado relevante"><label for="r7">Ainda não percebemos resultado relevante</label></div>
+          <div class="choice"><input id="r8" name="resultado" type="radio" value="Outro"><label for="r8">Outro resultado</label></div>
+        </div>
+        <div id="outroResultadoWrap" class="other-field">
+          <label class="control-label" for="outroResultado">Qual resultado?</label>
+          <input id="outroResultado" name="outro_resultado" type="text" maxlength="300" placeholder="Descreva brevemente">
+        </div>
+      </section>
+
+      <section class="section" data-question="melhoria">
+        <span class="step">05</span>
+        <label class="question-title" for="melhoria">Qual é a melhoria mais importante que deveríamos entregar nos próximos 90 dias? <span class="required">*</span></label>
+        <p class="hint">Sua resposta ajuda a priorizar nosso próximo ciclo de evolução.</p>
+        <textarea id="melhoria" name="melhoria" required maxlength="1200" placeholder="O que faria mais diferença na sua operação?"></textarea>
+      </section>
+
+      <div class="privacy">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3M6 10h12v10H6V10Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span>Sua resposta será identificada internamente para que possamos agir sobre o feedback. Em relatórios externos, os resultados serão apresentados de forma agregada e os comentários, anonimizados.</span>
+      </div>
+
+      <div class="actions">
+        <span class="microcopy">Campos com <span class="required">*</span> são obrigatórios.</span>
+        <button id="submitButton" class="submit-button" type="submit">Enviar minha resposta</button>
+      </div>
+      <div id="status" class="status" role="status" aria-live="polite"></div>
+      <button id="downloadButton" class="download-button" type="button">Baixar resposta de teste</button>
+    </form>
+
+    <footer>H-TALKS · Inteligência aplicada à operação, com o humano no controle.</footer>
+  </main>
+
+  <script>
+    const CONFIG = {
+      // Preencha com o endpoint HTTPS aprovado antes de publicar para clientes.
+      submitUrl: "/api/nps",
+      version: "nps-2026-09-v1"
+    };
+
+    const form = document.getElementById("npsForm");
+    const statusBox = document.getElementById("status");
+    const submitButton = document.getElementById("submitButton");
+    const downloadButton = document.getElementById("downloadButton");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const previewPill = document.getElementById("previewPill");
+    const outroWrap = document.getElementById("outroResultadoWrap");
+    const outroInput = document.getElementById("outroResultado");
+    let previewPayload = null;
+
+    if (!CONFIG.submitUrl) previewPill.classList.add("is-visible");
+
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("empresa")) document.getElementById("empresa").value = params.get("empresa");
+    if (params.get("nome")) document.getElementById("respondente").value = params.get("nome");
+
+    function selected(name) {
+      return Boolean(form.querySelector(`[name="${name}"]:checked`));
+    }
+
+    function updateProgress() {
+      const checks = [
+        document.getElementById("empresa").value.trim(),
+        document.getElementById("respondente").value.trim(),
+        selected("nps"),
+        document.getElementById("motivo").value.trim(),
+        selected("resultado"),
+        document.getElementById("melhoria").value.trim()
+      ];
+      const complete = checks.filter(Boolean).length;
+      const progress = Math.round((complete / checks.length) * 100);
+      progressBar.style.width = `${progress}%`;
+      progressText.textContent = `${progress}%`;
+    }
+
+    function updateOtherField() {
+      const other = form.querySelector('input[name="resultado"]:checked')?.value === "Outro";
+      outroWrap.classList.toggle("is-visible", other);
+      outroInput.required = other;
+      if (!other) outroInput.value = "";
+    }
+
+    function payloadFromForm() {
+      const data = Object.fromEntries(new FormData(form).entries());
+      return {
+        ...data,
+        nps: Number(data.nps),
+        versao: CONFIG.version,
+        enviado_em: new Date().toISOString()
+      };
+    }
+
+    function showStatus(message, kind) {
+      statusBox.textContent = message;
+      statusBox.className = `status is-visible ${kind}`;
+      statusBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
+    form.addEventListener("input", updateProgress);
+    form.addEventListener("change", () => { updateOtherField(); updateProgress(); });
+
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      statusBox.className = "status";
+      downloadButton.classList.remove("is-visible");
+
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        showStatus("Revise os campos obrigatórios antes de enviar.", "error");
+        return;
+      }
+
+      const payload = payloadFromForm();
+      previewPayload = payload;
+
+      if (!CONFIG.submitUrl) {
+        showStatus("Prévia validada. Nenhum dado foi enviado. Conecte um endpoint aprovado antes de compartilhar esta página com os clientes.", "success");
+        downloadButton.classList.add("is-visible");
+        return;
+      }
+
+      submitButton.disabled = true;
+      submitButton.textContent = "Enviando...";
+      try {
+        const response = await fetch(CONFIG.submitUrl, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+        if (!response.ok) throw new Error("Falha no envio");
+        form.reset();
+        updateOtherField();
+        updateProgress();
+        showStatus("Obrigado! Sua resposta foi recebida e ajudará a orientar as próximas melhorias do H-TALKS.", "success");
+      } catch (error) {
+        showStatus("Não foi possível enviar agora. Sua resposta não foi perdida na tela; tente novamente em alguns instantes.", "error");
+      } finally {
+        submitButton.disabled = false;
+        submitButton.textContent = "Enviar minha resposta";
+      }
+    });
+
+    downloadButton.addEventListener("click", () => {
+      if (!previewPayload) return;
+      const blob = new Blob([JSON.stringify(previewPayload, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "resposta-nps-htalks-teste.json";
+      link.click();
+      URL.revokeObjectURL(url);
+    });
+
+    updateProgress();
+  </script>
+</body>
+</html>

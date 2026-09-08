@@ -102,6 +102,19 @@ export function validateLead(offer, data) {
   return errors;
 }
 
+export function validateNps(data) {
+  const errors = {};
+  for (const field of ['empresa', 'respondente', 'motivo', 'resultado', 'melhoria']) {
+    if (!filled(data[field])) errors[field] = 'Campo obrigatório.';
+  }
+  const score = Number(data.nps);
+  if (!Number.isInteger(score) || score < 0 || score > 10) errors.nps = 'A nota deve estar entre 0 e 10.';
+  if (normalizeText(data.resultado, 300) === 'Outro' && !filled(data.outro_resultado)) errors.outro_resultado = 'Descreva o resultado.';
+  if (normalizeText(data.motivo, 1201).length > 1200) errors.motivo = 'Limite de 1200 caracteres.';
+  if (normalizeText(data.melhoria, 1201).length > 1200) errors.melhoria = 'Limite de 1200 caracteres.';
+  return errors;
+}
+
 function sanitizedPayload(data) {
   const clean = {};
   for (const [key, value] of Object.entries(data)) {
@@ -109,7 +122,7 @@ function sanitizedPayload(data) {
       ? value.map(item => normalizeText(item, 80)).slice(0, 20)
       : typeof value === 'boolean'
         ? value
-        : normalizeText(value, key.includes('description') ? 1000 : 500);
+      : normalizeText(value, key.includes('description') || ['motivo', 'melhoria'].includes(key) ? 1200 : 500);
   }
   delete clean.website;
   return clean;
@@ -159,6 +172,24 @@ export function createDatabase(path) {
       summary TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS lead_activities_idx ON lead_activities(lead_public_id, created_at DESC);
+    CREATE TABLE IF NOT EXISTS nps_responses (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      public_id TEXT NOT NULL UNIQUE,
+      created_at TEXT NOT NULL,
+      company TEXT NOT NULL,
+      respondent TEXT NOT NULL,
+      role TEXT NOT NULL DEFAULT '',
+      nps_score INTEGER NOT NULL CHECK (nps_score BETWEEN 0 AND 10),
+      reason TEXT NOT NULL,
+      main_result TEXT NOT NULL,
+      other_result TEXT NOT NULL DEFAULT '',
+      improvement TEXT NOT NULL,
+      form_version TEXT NOT NULL,
+      ip_hash TEXT NOT NULL,
+      payload_json TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS nps_created_idx ON nps_responses(created_at DESC);
+    CREATE INDEX IF NOT EXISTS nps_score_idx ON nps_responses(nps_score, created_at DESC);
   `);
   return db;
 }
@@ -193,7 +224,7 @@ function authorized(req, user, password) {
 }
 
 function mime(path) {
-  return ({ '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml' })[extname(path)] ?? 'application/octet-stream';
+  return ({ '.html': 'text/html; charset=utf-8', '.css': 'text/css; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png' })[extname(path)] ?? 'application/octet-stream';
 }
 
 function staticFile(res, file) {
@@ -234,7 +265,7 @@ export function createApp(options = {}) {
 
   return http.createServer(async (req, res) => {
     const url = new URL(req.url, 'http://localhost');
-    const routes = { '/': 'index.html', '/atendimento': 'atendimento.html', '/atendimento-rapido': 'atendimento-rapido-v2.html', '/atendimento-rapido-v1': 'atendimento-rapido.html', '/atendimento-rapido-v2': 'atendimento-rapido-v2.html', '/consultoria': 'consultoria.html', '/obrigado': 'obrigado.html', '/admin': 'admin.html' };
+    const routes = { '/': 'index.html', '/atendimento': 'atendimento.html', '/atendimento-rapido': 'atendimento-rapido-v2.html', '/atendimento-rapido-v1': 'atendimento-rapido.html', '/atendimento-rapido-v2': 'atendimento-rapido-v2.html', '/consultoria': 'consultoria.html', '/nps': 'nps.html', '/obrigado': 'obrigado.html', '/admin': 'admin.html' };
 
     res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
     res.setHeader('x-frame-options', 'DENY');
@@ -266,6 +297,11 @@ export function createApp(options = {}) {
       if (!authorized(req, adminUser, adminPassword)) return json(res, 401, { error: 'Não autorizado.' });
       const rows = db.prepare('SELECT public_id, created_at, offer, name, company, email, phone, score, priority, status, source, campaign, review_notes, reviewed_at, next_action, next_action_at, owner, payload_json FROM leads ORDER BY created_at DESC LIMIT 200').all();
       return json(res, 200, { leads: rows.map(row => ({ ...row, payload: JSON.parse(row.payload_json), payload_json: undefined })) });
+    }
+    if (req.method === 'GET' && url.pathname === '/api/admin/nps') {
+      if (!authorized(req, adminUser, adminPassword)) return json(res, 401, { error: 'Não autorizado.' });
+      const rows = db.prepare('SELECT public_id, created_at, company, respondent, role, nps_score, reason, main_result, other_result, improvement, form_version FROM nps_responses ORDER BY created_at DESC LIMIT 500').all();
+      return json(res, 200, { responses: rows });
     }
     const adminLeadMatch = url.pathname.match(/^\/api\/admin\/leads\/(HT-[A-Z0-9-]+)$/);
     if (req.method === 'GET' && adminLeadMatch) {
@@ -336,6 +372,37 @@ export function createApp(options = {}) {
       db.prepare(`INSERT INTO leads (public_id, created_at, offer, name, company, email, phone, score, priority, source, medium, campaign, content, landing_path, consent_at, ip_hash, payload_json)
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`)
         .run(publicId, createdAt, offer, clean.name, clean.company, clean.email ?? '', clean.phone, score, priority, clean.source ?? '', clean.medium ?? '', clean.campaign ?? '', clean.content ?? '', clean.landing_path ?? '', createdAt, ipHash, JSON.stringify(clean));
+      return json(res, 201, { ok: true, id: publicId });
+    }
+    if (req.method === 'POST' && url.pathname === '/api/nps') {
+      if (publicOrigin && req.headers.origin !== publicOrigin) return json(res, 403, { error: 'Origem inválida.' });
+      let raw = '';
+      for await (const chunk of req) {
+        raw += chunk;
+        if (raw.length > 32768) return json(res, 413, { error: 'Conteúdo excede o limite.' });
+      }
+      let input;
+      try { input = JSON.parse(raw); } catch { return json(res, 400, { error: 'JSON inválido.' }); }
+      const errors = validateNps(input ?? {});
+      if (Object.keys(errors).length) return json(res, 422, { error: 'Revise os campos.', fields: errors });
+
+      const forwarded = String(req.headers['x-forwarded-for'] ?? '').split(',')[0].trim();
+      const ip = forwarded || req.socket.remoteAddress || 'unknown';
+      const ipHash = createHash('sha256').update(`${hashSecret}:nps:${ip}`).digest('hex');
+      const rateKey = `nps:${ipHash}`;
+      const now = Date.now();
+      const recent = (rate.get(rateKey) ?? []).filter(ts => now - ts < 3600000);
+      if (recent.length >= 10) return json(res, 429, { error: 'Limite de envios atingido. Tente novamente mais tarde.' });
+      recent.push(now); rate.set(rateKey, recent);
+
+      const clean = sanitizedPayload(input);
+      const createdAt = new Date().toISOString();
+      const publicId = `NPS-${createdAt.slice(0, 10).replaceAll('-', '')}-${randomUUID().slice(0, 8).toUpperCase()}`;
+      db.prepare(`INSERT INTO nps_responses (public_id, created_at, company, respondent, role, nps_score, reason, main_result, other_result, improvement, form_version, ip_hash, payload_json)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`).run(
+        publicId, createdAt, clean.empresa, clean.respondente, clean.cargo ?? '', Number(clean.nps), clean.motivo,
+        clean.resultado, clean.outro_resultado ?? '', clean.melhoria, clean.versao ?? 'nps-2026-09-v1', ipHash, JSON.stringify(clean)
+      );
       return json(res, 201, { ok: true, id: publicId });
     }
     res.writeHead(404).end('Não encontrado');

@@ -4,7 +4,7 @@ import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import vm from 'node:vm';
-import { createApp, scoreLead, validateLead } from '../server.mjs';
+import { createApp, scoreLead, validateLead, validateNps } from '../server.mjs';
 
 const atendimento = {
   name: 'Rafael Andrade', company: 'HEADS', role: 'Sócio', phone: '47999999999', email: 'rafael@example.com', consent: true,
@@ -42,6 +42,52 @@ test('valida as landings curtas do Meta com escopo próprio', () => {
 test('classifica cenários fortes como P1', () => {
   assert.equal(scoreLead('atendimento', atendimento).priority, 'P1');
   assert.equal(scoreLead('consultoria', consultoria).priority, 'P1');
+});
+
+test('valida resposta NPS e exige detalhe quando resultado é Outro', () => {
+  const response = {
+    empresa: 'HEADS', respondente: 'Rafael', cargo: 'Diretor', nps: 9,
+    motivo: 'Atendimento organizado.', resultado: 'Mais agilidade nas respostas',
+    melhoria: 'Melhorar os relatórios.', versao: 'nps-2026-09-v1'
+  };
+  assert.deepEqual(validateNps(response), {});
+  assert.ok(validateNps({ ...response, nps: 11 }).nps);
+  assert.ok(validateNps({ ...response, resultado: 'Outro', outro_resultado: '' }).outro_resultado);
+});
+
+test('publica formulário NPS, persiste resposta e permite consulta autenticada', async t => {
+  const temp = mkdtempSync(join(tmpdir(), 'htalks-nps-'));
+  t.after(() => rmSync(temp, { recursive: true, force: true }));
+  const app = createApp({ databasePath: join(temp, 'leads.sqlite'), adminUser: 'rafael', adminPassword: 'segredo', hashSecret: 'teste' });
+  await new Promise(resolve => app.listen(0, '127.0.0.1', resolve));
+  t.after(() => app.close());
+  const base = `http://127.0.0.1:${app.address().port}`;
+
+  const page = await fetch(`${base}/nps`);
+  assert.equal(page.status, 200);
+  assert.match(await page.text(), /submitUrl:\s*"\/api\/nps"/);
+  const assetLogo = await fetch(`${base}/assets/htalks-logo-navy.png`);
+  assert.equal(assetLogo.status, 200);
+  assert.equal(assetLogo.headers.get('content-type'), 'image/png');
+
+  const response = {
+    empresa: 'HEADS', respondente: 'Rafael', cargo: 'Diretor', nps: 9,
+    motivo: 'Atendimento organizado.', resultado: 'Mais agilidade nas respostas',
+    melhoria: 'Melhorar os relatórios.', versao: 'nps-2026-09-v1'
+  };
+  const created = await fetch(`${base}/api/nps`, {
+    method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(response)
+  });
+  assert.equal(created.status, 201);
+  assert.match((await created.json()).id, /^NPS-/);
+
+  assert.equal((await fetch(`${base}/api/admin/nps`)).status, 401);
+  const listed = await fetch(`${base}/api/admin/nps`, { headers: { authorization: `Basic ${Buffer.from('rafael:segredo').toString('base64')}` } });
+  assert.equal(listed.status, 200);
+  const body = await listed.json();
+  assert.equal(body.responses.length, 1);
+  assert.equal(body.responses[0].nps_score, 9);
+  assert.equal(body.responses[0].company, 'HEADS');
 });
 
 test('captura lead pela API e lista no painel autenticado', async t => {
