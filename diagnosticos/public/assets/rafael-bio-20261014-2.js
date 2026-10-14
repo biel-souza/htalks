@@ -1,0 +1,1 @@
+(function(){try{var s=localStorage.getItem('ra-theme');if(s==='light'||s==='dark')document.documentElement.dataset.theme=s;else document.documentElement.dataset.theme='dark'}catch(e){document.documentElement.dataset.theme='dark'}})()

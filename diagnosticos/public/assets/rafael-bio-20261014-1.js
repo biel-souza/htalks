@@ -1,0 +1,1 @@
+(function(){if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;var d=document.documentElement;d.classList.add('anim-on');setTimeout(function(){if(!d.classList.contains('anim-ready'))d.classList.remove('anim-on')},4000)})()
