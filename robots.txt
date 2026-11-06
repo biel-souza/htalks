@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+Disallow: /index17-03-2026.html
+
+Sitemap: https://h-talks.com.br/sitemap.xml
