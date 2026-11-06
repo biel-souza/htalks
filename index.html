@@ -602,6 +602,17 @@ html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 .wrap{padding-left:16px;padding-right:16px}
 }
 
+/* desempenho em celular (iPhone/Safari): sem desfoques pesados nem efeitos de fundo animados */
+@media (hover:none),(max-width:900px){
+.bg-orbs,.cglow,.mesh,.final::after{display:none!important}
+*,*::before,*::after{-webkit-backdrop-filter:none!important;backdrop-filter:none!important}
+.nav.stuck{background:rgba(255,255,255,.98)}
+[data-theme=dark] .nav.stuck{background:rgba(8,13,26,.97)}
+.badge{background:rgba(255,255,255,.95)}
+.ep-snd,.ep-badge,.bchip,.ntag{background:rgba(11,18,38,.92)}
+.orb{will-change:auto}
+}
+
 /* ---------- responsive ---------- */
 @media (max-width:1040px){
 .nlinks,.nav-r .hide{display:none}
@@ -1148,7 +1159,7 @@ h1.hh{font-size:clamp(33px,10vw,46px);line-height:1.03}
 <div class="eps">
 <article class="ep" data-rv style="--d:0ms">
 <div class="ep-ph">
-<video class="ep-v" src="assets/videos/dona-dorzinha.mp4" poster="assets/videos/dona-dorzinha.jpg" muted loop playsinline preload="metadata" aria-label="Vídeo do episódio Dona Dorzinha"></video>
+<video class="ep-v" src="assets/videos/dona-dorzinha.mp4" poster="assets/videos/dona-dorzinha.jpg" muted loop playsinline preload="none" aria-label="Vídeo do episódio Dona Dorzinha"></video>
 <button class="ep-snd" type="button" aria-label="Ativar som"><svg class="s-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg><svg class="s-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg><span class="ep-snd-t">Ouvir</span></button>
 <span class="ep-badge"><span class="dot"></span>Ao vivo no H-TALKS</span>
 </div>
@@ -1162,7 +1173,7 @@ h1.hh{font-size:clamp(33px,10vw,46px);line-height:1.03}
 </article>
 <article class="ep" data-rv style="--d:100ms">
 <div class="ep-ph">
-<video class="ep-v" src="assets/videos/amostrinha.mp4" poster="assets/videos/amostrinha.jpg" muted loop playsinline preload="metadata" aria-label="Vídeo do episódio Amostrinha"></video>
+<video class="ep-v" src="assets/videos/amostrinha.mp4" poster="assets/videos/amostrinha.jpg" muted loop playsinline preload="none" aria-label="Vídeo do episódio Amostrinha"></video>
 <button class="ep-snd" type="button" aria-label="Ativar som"><svg class="s-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg><svg class="s-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg><span class="ep-snd-t">Ouvir</span></button>
 <span class="ep-badge"><span class="dot"></span>Ao vivo no H-TALKS</span>
 </div>
@@ -1176,7 +1187,7 @@ h1.hh{font-size:clamp(33px,10vw,46px);line-height:1.03}
 </article>
 <article class="ep" data-rv style="--d:200ms">
 <div class="ep-ph">
-<video class="ep-v" src="assets/videos/fichinha.mp4" poster="assets/videos/fichinha.jpg" muted loop playsinline preload="metadata" aria-label="Vídeo do episódio Fichinha"></video>
+<video class="ep-v" src="assets/videos/fichinha.mp4" poster="assets/videos/fichinha.jpg" muted loop playsinline preload="none" aria-label="Vídeo do episódio Fichinha"></video>
 <button class="ep-snd" type="button" aria-label="Ativar som"><svg class="s-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><line x1="23" y1="9" x2="17" y2="15"/><line x1="17" y1="9" x2="23" y2="15"/></svg><svg class="s-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 5 6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07M19.07 4.93a10 10 0 0 1 0 14.14"/></svg><span class="ep-snd-t">Ouvir</span></button>
 <span class="ep-badge"><span class="dot"></span>Ao vivo no H-TALKS</span>
 </div>
@@ -1586,7 +1597,8 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
     var ctx = canvas.getContext("2d");
     var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-    var DPR = Math.min(window.devicePixelRatio || 1, 2);
+    var mobile = window.matchMedia && window.matchMedia("(hover: none), (max-width: 900px)").matches;
+    var DPR = mobile ? 1 : Math.min(window.devicePixelRatio || 1, 2);
     var W = 0, H = 0, cx = 0, cy = 0, RX = 0, RY = 0;
     var nodes = [], pulses = [], sparks = [], waves = [];
     var LINK = 128, CORE_PULL = 190;
@@ -1607,7 +1619,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
     }
 
     function build() {
-      var count = Math.max(46, Math.min(170, Math.round((W * H) / 5200)));
+      var count = mobile ? Math.max(30, Math.min(56, Math.round((W * H) / 7000))) : Math.max(46, Math.min(170, Math.round((W * H) / 5200)));
       nodes = [];
       for (var i = 0; i < count; i++) {
         var ang = Math.random() * Math.PI * 2;
@@ -1641,7 +1653,9 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
       if (sparks.length > 40) sparks.shift();
     }
 
+    var skip = false;
     function step() {
+      if (mobile) { skip = !skip; if (skip) { raf = requestAnimationFrame(step); return; } }
       ctx.clearRect(0, 0, W, H);
       t += 1;
 
@@ -1666,7 +1680,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
           var aa = t * spd + (s * Math.PI * 2) / (2 + o) + o;
           ctx.beginPath(); ctx.arc(cx + Math.cos(aa) * orr, cy + Math.sin(aa) * orr, 2.4, 0, Math.PI * 2);
           ctx.fillStyle = "rgba(125,232,255,.95)";
-          ctx.shadowColor = "rgba(34,211,238,.9)"; ctx.shadowBlur = 12; ctx.fill(); ctx.shadowBlur = 0;
+          ctx.shadowColor = "rgba(34,211,238,.9)"; ctx.shadowBlur = mobile ? 0 : 12; ctx.fill(); ctx.shadowBlur = 0;
         }
       }
 
@@ -1725,7 +1739,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
         if (sk.p >= 1) { sparks.splice(q, 1); continue; }
         var sx = sk.a.x + (sk.b.x - sk.a.x) * sk.p, sy = sk.a.y + (sk.b.y - sk.a.y) * sk.p;
         ctx.beginPath(); ctx.arc(sx, sy, 1.8, 0, Math.PI * 2);
-        ctx.fillStyle = "rgba(186,240,255,.95)"; ctx.shadowColor = "rgba(34,211,238,.9)"; ctx.shadowBlur = 8;
+        ctx.fillStyle = "rgba(186,240,255,.95)"; ctx.shadowColor = "rgba(34,211,238,.9)"; ctx.shadowBlur = mobile ? 0 : 8;
         ctx.fill(); ctx.shadowBlur = 0;
       }
 
@@ -1742,7 +1756,7 @@ document.querySelectorAll('a[href^="#"]').forEach(function(a){
           var al = (1 - pu.p) * (1 - tr * 0.24);
           ctx.beginPath(); ctx.arc(px, py, 2.6 - tr * 0.45, 0, Math.PI * 2);
           ctx.fillStyle = (pu.out ? "rgba(147,197,253," : "rgba(125,232,255,") + al + ")";
-          if (tr === 0) { ctx.shadowColor = "rgba(34,211,238,.95)"; ctx.shadowBlur = 12; }
+          if (tr === 0) { ctx.shadowColor = "rgba(34,211,238,.95)"; ctx.shadowBlur = mobile ? 0 : 12; }
           ctx.fill(); ctx.shadowBlur = 0;
         }
       }
